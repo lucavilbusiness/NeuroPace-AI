@@ -241,23 +241,34 @@
     gap: 10px;
   }
   .opt-btn {
-    padding: 14px 12px;
+    padding: 16px 12px;
     background: var(--surface2);
-    border: 1.5px solid var(--border);
+    border: 2px solid #3a4560;
     border-radius: 12px;
     color: var(--text);
     font-family: var(--font-body);
-    font-size: .9rem;
+    font-size: .92rem;
     font-weight: 500;
     cursor: pointer;
     transition: all .18s;
     text-align: center;
+    line-height: 1.35;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
   }
-  .opt-btn:hover {
+  .opt-btn:hover, .opt-btn:focus {
     border-color: var(--accent);
-    background: rgba(74,222,128,.08);
+    background: rgba(74,222,128,.12);
     color: var(--accent);
     transform: translateY(-2px);
+    outline: none;
+  }
+  .opt-btn:active {
+    transform: scale(.97);
+    background: rgba(74,222,128,.2);
   }
 
   /* ===== QUIZ BACK & EXIT ===== */
@@ -301,6 +312,17 @@
     color: var(--accent);
     font-weight: 700;
     margin-bottom: 10px;
+  }
+  .quiz-hint {
+    font-size: .82rem;
+    color: var(--muted);
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 9px 12px;
+    margin-top: 10px;
+    margin-bottom: 4px;
+    line-height: 1.5;
   }
   .quiz-options.five {
     grid-template-columns: 1fr 1fr;
@@ -718,6 +740,271 @@ let lineChartInst = null;
 let radarChartInst = null;
 let lastDashData = null;
 
+
+/* ============ QUESTIONS ============ */
+const questions = [
+  // --- SONO & DESCANSO ---
+  {
+    cat: 'Noite de ontem',
+    q: 'Como voce dormiu ontem a noite?',
+    hint: 'Pense em como foi seu sono — se voce acordou descansado ou cansado.',
+    key: 'sono',
+    opts: [
+      ['Pessimo, mal consegui dormir', 2],
+      ['Ruim, acordei cansado', 4],
+      ['Mais ou menos', 6],
+      ['Bem, dormi razoavelmente', 8],
+      ['Otimo, acordei descansado', 10]
+    ]
+  },
+  {
+    cat: 'Noite de ontem',
+    q: 'Quantas horas voce dormiu?',
+    hint: 'Tente lembrar que horas voce foi dormir e que horas acordou.',
+    key: 'horas_sono',
+    opts: [
+      ['Menos de 5 horas', 2],
+      ['Umas 5 ou 6 horas', 4],
+      ['Umas 6 ou 7 horas', 7],
+      ['7 ou 8 horas', 9],
+      ['Mais de 8 horas', 10]
+    ]
+  },
+  // --- ENERGIA & CORPO ---
+  {
+    cat: 'Seu corpo hoje',
+    q: 'Como voce estava de energia quando acordou?',
+    hint: 'Aquele primeiro momento do dia — voce queria levantar ou ficaria na cama?',
+    key: 'energia_manha',
+    opts: [
+      ['Sem energia nenhuma', 2],
+      ['Bem cansado', 4],
+      ['Mais ou menos', 6],
+      ['Com boa energia', 8],
+      ['Pronto para o dia', 10]
+    ]
+  },
+  {
+    cat: 'Seu corpo hoje',
+    q: 'Voce se moveu ou fez alguma atividade fisica hoje?',
+    hint: 'Pode ser academia, caminhada, subir escadas, qualquer coisa que mexeu seu corpo.',
+    key: 'exercicio',
+    opts: [
+      ['Fiquei parado o dia todo', 2],
+      ['Me mexi um pouquinho', 5],
+      ['Fiz algo leve, como caminhar', 8],
+      ['Me exercitei de verdade', 10]
+    ]
+  },
+  {
+    cat: 'Seu corpo hoje',
+    q: 'Como foi o que voce comeu hoje?',
+    hint: 'Nao precisa ser perfeito — pense se comeu bem, pulou refeicoes, comeu coisas pesadas...',
+    key: 'alimentacao',
+    opts: [
+      ['Comi mal ou quase nada', 2],
+      ['Comi mas nao foi legal', 5],
+      ['Comi razoavelmente bem', 8],
+      ['Me alimentei muito bem', 10]
+    ]
+  },
+  {
+    cat: 'Seu corpo hoje',
+    q: 'Voce bebeu agua suficiente hoje?',
+    hint: 'Uma pessoa adulta precisa de cerca de 2 litros de agua por dia.',
+    key: 'hidratacao',
+    opts: [
+      ['Quase nao bebi agua', 2],
+      ['Bebi pouco', 5],
+      ['Bebi uma quantidade razoavel', 7],
+      ['Me mantive bem hidratado', 10]
+    ]
+  },
+  // --- MENTE & FOCO ---
+  {
+    cat: 'Sua cabeca hoje',
+    q: 'Voce sentiu que tinha muita coisa na sua cabeca hoje?',
+    hint: 'Muitas tarefas, decisoes, preocupacoes, reunioes — seu cerebro ficou sobrecarregado?',
+    key: 'carga',
+    opts: [
+      ['Nao, foi um dia tranquilo', 4],
+      ['Tive bastante coisa, mas ok', 7],
+      ['Foi muito puxado', 10],
+      ['Minha cabeca nao parou um segundo', 12]
+    ]
+  },
+  {
+    cat: 'Sua cabeca hoje',
+    q: 'Voce conseguiu se concentrar nas coisas que precisava fazer?',
+    hint: 'Ficou com a cabeca viajando? Precisou reler a mesma coisa varias vezes?',
+    key: 'foco',
+    opts: [
+      ['Nao consegui me concentrar em nada', 2],
+      ['Me distraia muito facilmente', 4],
+      ['Me concentrei razoavelmente', 7],
+      ['Fui muito focado hoje', 10]
+    ]
+  },
+  {
+    cat: 'Sua cabeca hoje',
+    q: 'Voce conseguiu fazer o que precisava hoje?',
+    hint: 'Pense nas suas tarefas do dia — trabalho, escola, afazeres em casa.',
+    key: 'produtividade',
+    opts: [
+      ['Nao consegui fazer nada', 2],
+      ['Fiz muito pouco', 4],
+      ['Fiz a metade do que queria', 6],
+      ['Fiz a maior parte', 8],
+      ['Fiz tudo que precisava', 10]
+    ]
+  },
+  // --- EMOCOES ---
+  {
+    cat: 'Como voce se sentiu',
+    q: 'Voce se sentiu nervoso ou sob pressao hoje?',
+    hint: 'Aquela sensacao de que tem muita coisa acontecendo e voce precisa dar conta de tudo.',
+    key: 'estresse',
+    opts: [
+      ['Nada, dia super tranquilo', 2],
+      ['Um pouquinho', 4],
+      ['Sim, bastante', 6],
+      ['Muito estressado', 8],
+      ['Foi um dos piores dias', 10]
+    ]
+  },
+  {
+    cat: 'Como voce se sentiu',
+    q: 'Voce ficou preocupado ou ansioso ao longo do dia?',
+    hint: 'Aquela cabeca que nao para, coração acelerado, fica pensando em coisas ruins que podem acontecer.',
+    key: 'ansiedade',
+    opts: [
+      ['Nada, fiquei tranquilo', 2],
+      ['Um pouquinho', 4],
+      ['Fiquei ansioso em alguns momentos', 6],
+      ['Fiquei ansioso boa parte do dia', 8],
+      ['Fui tomado pela ansiedade', 10]
+    ]
+  },
+  {
+    cat: 'Como voce se sentiu',
+    q: 'Como estava seu humor hoje no geral?',
+    hint: 'Se alguem te perguntasse "como voce esta?" de verdade — o que voce diria?',
+    key: 'humor',
+    opts: [
+      ['Me senti muito mal', 2],
+      ['Estava pra baixo', 4],
+      ['Neutro, nem bem nem mal', 6],
+      ['Estava bem', 8],
+      ['Me senti otimo', 10]
+    ]
+  },
+  {
+    cat: 'Como voce se sentiu',
+    q: 'Voce ficou irritado ou impaciente com algo ou alguem hoje?',
+    hint: 'Aquelas situacoes em que voce perdeu a paciencia mais facil do que o normal.',
+    key: 'irritabilidade',
+    opts: [
+      ['Sim, estava irritado com tudo', 2],
+      ['Me irritei algumas vezes', 5],
+      ['Quase nao me irritei', 7],
+      ['Fui super calmo o dia todo', 10]
+    ]
+  },
+  // --- TELAS & DESCANSO ---
+  {
+    cat: 'Telas e descanso',
+    q: 'Quantas horas voce ficou no celular, computador ou TV hoje?',
+    hint: 'Some tudo — trabalho, redes sociais, streaming, videogame...',
+    key: 'tela',
+    opts: [
+      ['Menos de 2 horas', 2],
+      ['Umas 2 a 4 horas', 5],
+      ['Umas 4 a 6 horas', 7],
+      ['Umas 6 a 8 horas', 9],
+      ['Mais de 8 horas', 10]
+    ]
+  },
+  {
+    cat: 'Telas e descanso',
+    q: 'Voce se sentiu esgotado de tanta informacao ou tela hoje?',
+    hint: 'Aquela sensacao de olhos cansados, cabeca cheia, enjoo de tanto scroll.',
+    key: 'fadiga',
+    opts: [
+      ['Nao, me senti bem', 2],
+      ['Um pouquinho', 4],
+      ['Sim, ja estava saturado', 6],
+      ['Bastante cansado de tanta tela', 8],
+      ['Me senti completamente esgotado', 10]
+    ]
+  },
+  {
+    cat: 'Telas e descanso',
+    q: 'Voce parou para descansar durante o dia?',
+    hint: 'Uma pausa pode ser tomar um cafe, se alongar, dar uma caminhada, ou so fechar os olhos por 5 minutos.',
+    key: 'pausas',
+    opts: [
+      ['Nao parei em nenhum momento', 0],
+      ['Parei 1 ou 2 vezes', 4],
+      ['Parei algumas vezes', 7],
+      ['Fiz varias pausas ao longo do dia', 10]
+    ]
+  },
+  // --- PESSOAS ---
+  {
+    cat: 'Pessoas ao seu redor',
+    q: 'Voce teve contato com pessoas que gosta hoje?',
+    hint: 'Familia, amigos, colegas — pode ser pessoalmente, por mensagem ou ligacao.',
+    key: 'social',
+    opts: [
+      ['Fiquei sozinho o dia todo', 2],
+      ['Tive pouco contato', 4],
+      ['Conversei com algumas pessoas', 6],
+      ['Tive boas interacoes', 8],
+      ['Foi um dia muito bom de conexoes', 10]
+    ]
+  },
+  {
+    cat: 'Pessoas ao seu redor',
+    q: 'Voce sentiu vontade de fazer as coisas hoje? Tinha animo?',
+    hint: 'Aquela sensacao de ter um motivo para levantar da cama e ir em frente.',
+    key: 'motivacao',
+    opts: [
+      ['Nao tinha vontade de nada', 2],
+      ['Estava bem desmotivado', 4],
+      ['Mais ou menos animado', 6],
+      ['Estava motivado', 8],
+      ['Me senti cheio de proposito', 10]
+    ]
+  },
+  // --- VOCE ---
+  {
+    cat: 'Cuidando de voce',
+    q: 'Voce fez alguma coisa boa por voce mesmo hoje?',
+    hint: 'Algo que te fez bem — descansar, ler, ouvir musica, tomar um banho gostoso, hobby...',
+    key: 'autocuidado',
+    opts: [
+      ['Nao fiz nada por mim', 2],
+      ['Quase nada', 4],
+      ['Uma coisinha pequena', 6],
+      ['Sim, me cuidei', 8],
+      ['Me dediquei bastante a mim mesmo', 10]
+    ]
+  },
+  {
+    cat: 'Cuidando de voce',
+    q: 'Como voce esta de energia agora, no final do dia?',
+    hint: 'Como voce se sente nesse momento — tem pique para mais alguma coisa ou quer so descansar?',
+    key: 'energia',
+    opts: [
+      ['Completamente esgotado', 2],
+      ['Bem cansado', 4],
+      ['Mais ou menos', 6],
+      ['Com energia ainda', 8],
+      ['Me sinto otimo', 10]
+    ]
+  },
+];
+
 /* ============ CLOUD STORAGE ============ */
 async function cloudSave(key, value) {
   try {
@@ -853,21 +1140,27 @@ function startQuiz() {
 function renderQ() {
   const pct = (step / questions.length) * 100;
   document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('stepLabel').textContent = `${step + 1} / ${questions.length}`;
+  document.getElementById('stepLabel').textContent = (step + 1) + ' / ' + questions.length;
   const q = questions[step];
-  const catLabel = q.cat ? `<div class="quiz-cat">${q.cat}</div>` : '';
-  document.getElementById('quizQ').innerHTML = catLabel + q.q;
+  const catLabel = q.cat ? '<div class="quiz-cat">' + q.cat + '</div>' : '';
+  const hintLabel = q.hint ? '<div class="quiz-hint">' + q.hint + '</div>' : '';
+  document.getElementById('quizQ').innerHTML = catLabel + q.q + hintLabel;
   const isFive = q.opts.length === 5;
-  document.getElementById('quizOpts').className = isFive ? 'quiz-options five' : 'quiz-options';
-  document.getElementById('quizOpts').innerHTML = q.opts.map(o =>
-    `<button class="opt-btn" onclick="answer(${o[1]})">${o[0]}</button>`
-  ).join('');
-  // show back button only after first question
+  const container = document.getElementById('quizOpts');
+  container.className = isFive ? 'quiz-options five' : 'quiz-options';
+  container.innerHTML = '';
+  q.opts.forEach(function(o) {
+    const btn = document.createElement('button');
+    btn.className = 'opt-btn';
+    btn.textContent = o[0];
+    btn.addEventListener('click', function() { answer(o[1]); });
+    container.appendChild(btn);
+  });
   document.getElementById('backBtn').style.display = step > 0 ? 'block' : 'none';
 }
 
 function answer(v) {
-  answerHistory.push({ step, answers: { ...answers } });
+  answerHistory.push({ step: step, answers: Object.assign({}, answers) });
   answers[questions[step].key] = v;
   step++;
   if (step >= questions.length) finish();
