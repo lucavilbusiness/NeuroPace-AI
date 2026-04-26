@@ -490,6 +490,35 @@
   .alert.show { display: block; }
 
   canvas { max-width: 100%; }
+
+  /* ===== HOME FEATURES ===== */
+  .hero-features {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin: 24px 0 28px;
+  }
+  .feat {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px;
+    font-size: .82rem; color: var(--text2); font-weight: 500;
+  }
+  .feat span:first-child { font-size: 1.1rem; }
+
+  /* ===== START SCREEN ===== */
+  .start-hero { text-align: center; padding: 16px 0 20px; }
+  .start-icon { font-size: 3rem; margin-bottom: 12px; }
+  .start-title { font-family: var(--font-head); font-size: 1.4rem; font-weight: 700; margin-bottom: 10px; }
+  .start-sub { font-size: .9rem; color: var(--text2); line-height: 1.5; }
+  .start-sub strong { color: var(--accent); }
+  .start-cats {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    justify-content: center; margin: 20px 0 24px;
+  }
+  .cat-chip {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 99px; padding: 5px 12px;
+    font-size: .78rem; color: var(--text2); font-weight: 500;
+  }
 </style>
 </head>
 <body>
@@ -501,7 +530,39 @@
       <div class="logo-badge"><span>🧠</span> NeuroPace IA</div>
       <h1 class="hero-title">Seu check-in<br>mental diário.</h1>
       <p class="hero-sub">Acompanhe sono, foco, energia e burnout — tudo em menos de 2 minutos.</p>
-      <button class="btn btn-primary" onclick="goTo('authScreen')">Começar agora</button>
+      <div class="hero-features">
+        <div class="feat"><span>🧠</span><span>20 perguntas em categorias</span></div>
+        <div class="feat"><span>📊</span><span>4 scores detalhados</span></div>
+        <div class="feat"><span>☁️</span><span>Dados salvos na nuvem</span></div>
+        <div class="feat"><span>📈</span><span>Histórico e evolução</span></div>
+      </div>
+      <button class="btn btn-primary" onclick="goTo('authScreen')">Entrar / Criar conta</button>
+    </div>
+  </div>
+
+  <!-- ========== START SCREEN ========== -->
+  <div class="screen" id="startScreen">
+    <div class="card">
+      <div class="top-bar">
+        <span class="user-pill" id="startUserPill">👤 —</span>
+        <button class="logout-btn" onclick="confirmLogout()">Sair da conta</button>
+      </div>
+      <div class="start-hero">
+        <div class="start-icon">🧠</div>
+        <h2 class="start-title">Pronto para o check-in?</h2>
+        <p class="start-sub">São 20 perguntas rápidas sobre seu dia. Leva cerca de <strong>2–3 minutos</strong>.</p>
+      </div>
+      <div class="start-cats">
+        <span class="cat-chip">😴 Sono</span>
+        <span class="cat-chip">⚡ Energia</span>
+        <span class="cat-chip">🧠 Foco</span>
+        <span class="cat-chip">🌊 Emoções</span>
+        <span class="cat-chip">📱 Digital</span>
+        <span class="cat-chip">🤝 Relações</span>
+        <span class="cat-chip">🌿 Autocuidado</span>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()">▶ Começar check-in</button>
+      <button class="btn btn-secondary mt" id="viewDashBtn" onclick="viewLastDash()" style="display:none">📊 Ver último relatório</button>
     </div>
   </div>
 
@@ -652,39 +713,35 @@
 let currentUser = null;
 let step = 0;
 let answers = {};
+let answerHistory = []; // stack for back navigation
 let lineChartInst = null;
 let radarChartInst = null;
+let lastDashData = null;
 
-/* ============ QUESTIONS ============ */
-const questions = [
-  // --- SONO & DESCANSO ---
-  { cat:'😴 Sono & Descanso',      q:"Como foi a qualidade do seu sono ontem?",             key:"sono",          opts:[["Muito ruim 😣",2],["Ruim 😕",4],["Regular 😐",6],["Boa 🙂",8],["Excelente 😄",10]] },
-  { cat:'😴 Sono & Descanso',      q:"Quantas horas você dormiu?",                          key:"horas_sono",    opts:[["< 5h 😵",2],["5–6h 😓",4],["6–7h 😐",7],["7–8h 😊",9],["8h+ 😴",10]] },
-  // --- ENERGIA & CORPO ---
-  { cat:'⚡ Energia & Corpo',      q:"Como estava sua energia ao acordar?",                 key:"energia_manha", opts:[["Péssima 🪫",2],["Baixa 😔",4],["Razoável 😐",6],["Boa 🙂",8],["Ótima ⚡",10]] },
-  { cat:'⚡ Energia & Corpo',      q:"Você se exercitou ou moveu o corpo hoje?",            key:"exercicio",     opts:[["Nada 🛋️",2],["Pouco 🚶",5],["Moderado 🏃",8],["Muito 💪",10]] },
-  { cat:'⚡ Energia & Corpo',      q:"Como foi sua alimentação hoje?",                      key:"alimentacao",   opts:[["Muito ruim 🍔",2],["Razoável 🥪",5],["Boa 🥗",8],["Ótima 🥦",10]] },
-  { cat:'⚡ Energia & Corpo',      q:"Você se hidratou bem hoje?",                          key:"hidratacao",    opts:[["Quase nada 🏜️",2],["Pouco 💧",5],["Razoável 💧💧",7],["Muito bem 💦",10]] },
-  // --- MENTE & FOCO ---
-  { cat:'🧠 Mente & Foco',         q:"Qual a carga mental que você sentiu hoje?",           key:"carga",         opts:[["Leve 🍃",4],["Normal 😶",7],["Alta 😣",10],["Sobrecarga 🔥",12]] },
-  { cat:'🧠 Mente & Foco',         q:"Como foi seu nível de foco e concentração?",          key:"foco",          opts:[["Muito baixo 🌀",2],["Baixo 😕",4],["Médio 🎯",7],["Alto ⚡",10]] },
-  { cat:'🧠 Mente & Foco',         q:"Você conseguiu completar suas tarefas do dia?",       key:"produtividade", opts:[["Nenhuma 😞",2],["Poucas 😕",4],["Metade 😐",6],["A maioria 🙂",8],["Todas 🏆",10]] },
-  // --- ESTRESSE & EMOÇÕES ---
-  { cat:'🌊 Estresse & Emoções',   q:"Qual foi seu nível de estresse hoje?",                key:"estresse",      opts:[["Baixo 😌",2],["Leve 😶",4],["Médio 😤",6],["Alto 😰",8],["Crítico 🚨",10]] },
-  { cat:'🌊 Estresse & Emoções',   q:"Como estava sua ansiedade ao longo do dia?",          key:"ansiedade",     opts:[["Nenhuma 😊",2],["Leve 😌",4],["Moderada 😬",6],["Alta 😰",8],["Intensa 😱",10]] },
-  { cat:'🌊 Estresse & Emoções',   q:"Como você descreveria seu humor hoje?",               key:"humor",         opts:[["Muito mal 😢",2],["Mal 😕",4],["Neutro 😐",6],["Bem 🙂",8],["Muito bem 😄",10]] },
-  { cat:'🌊 Estresse & Emoções',   q:"Você sentiu irritabilidade ou impaciência?",          key:"irritabilidade",opts:[["Muita 😡",2],["Alguma 😤",5],["Pouca 😐",7],["Nenhuma 😊",10]] },
-  // --- DIGITAL & TRABALHO ---
-  { cat:'📱 Digital & Trabalho',   q:"Quantas horas de tela você acumulou hoje?",           key:"tela",          opts:[["< 2h 🌿",2],["2–4h 😐",5],["4–6h 😕",7],["6–8h 😓",9],["8h+ 📱",10]] },
-  { cat:'📱 Digital & Trabalho',   q:"Sentiu fadiga digital ou sobrecarga de informação?",  key:"fadiga",        opts:[["Nenhuma 🌿",2],["Leve 😐",4],["Moderada 😕",6],["Alta 🥴",8],["Intensa 🤯",10]] },
-  { cat:'📱 Digital & Trabalho',   q:"Quantas pausas você fez ao longo do dia?",            key:"pausas",        opts:[["Nenhuma 😓",0],["1–2 ☕",4],["3–4 🧘",7],["5 ou mais 🌿",10]] },
-  // --- RELAÇÕES & PROPÓSITO ---
-  { cat:'🤝 Relações & Propósito', q:"Como foram suas interações sociais hoje?",            key:"social",        opts:[["Isolado 🫥",2],["Pouco contato 😕",4],["Normal 😐",6],["Boas conexões 🤝",8],["Muito positivo 💛",10]] },
-  { cat:'🤝 Relações & Propósito', q:"Você sentiu propósito ou motivação hoje?",            key:"motivacao",     opts:[["Nenhuma 😶",2],["Pouca 😕",4],["Alguma 😐",6],["Bastante 🙂",8],["Muita 🔥",10]] },
-  // --- AUTOCUIDADO ---
-  { cat:'🌿 Autocuidado',          q:"Você fez algo para cuidar de si mesmo hoje?",         key:"autocuidado",   opts:[["Nada 😔",2],["Quase nada 😕",4],["Um pouco 😐",6],["Sim 🙂",8],["Muito 🌿",10]] },
-  { cat:'🌿 Autocuidado',          q:"Como está sua energia no fechamento do dia?",         key:"energia",       opts:[["Esgotada 🪫",2],["Baixa 😔",4],["Neutra 😑",6],["Boa 🙂",8],["Ótima ⚡",10]] },
-];
+/* ============ CLOUD STORAGE ============ */
+async function cloudSave(key, value) {
+  try {
+    await window.storage.set('np_' + key, JSON.stringify(value));
+  } catch(e) {
+    // fallback to localStorage
+    localStorage.setItem('np_' + key, JSON.stringify(value));
+  }
+}
+
+async function cloudGet(key) {
+  try {
+    const r = await window.storage.get('np_' + key);
+    return r ? JSON.parse(r.value) : null;
+  } catch(e) {
+    const v = localStorage.getItem('np_' + key);
+    return v ? JSON.parse(v) : null;
+  }
+}
+
+async function cloudDelete(key) {
+  try { await window.storage.delete('np_' + key); } catch(e) {}
+  localStorage.removeItem('np_' + key);
+}
 
 /* ============ NAVIGATION ============ */
 function goTo(id) {
@@ -694,7 +751,6 @@ function goTo(id) {
   });
   const el = document.getElementById(id);
   el.style.display = 'block';
-  // force reflow for animation
   requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('active')));
 }
 
@@ -712,43 +768,84 @@ function toggleForm(which) {
   document.getElementById('signupForm').style.display = which === 'signup' ? 'block' : 'none';
 }
 
-/* ============ USERS ============ */
-function getUsers() { return JSON.parse(localStorage.getItem('np_users') || '{}'); }
-function saveUsers(u) { localStorage.setItem('np_users', JSON.stringify(u)); }
+/* ============ USERS (cloud) ============ */
+async function getUsers() {
+  return (await cloudGet('users')) || {};
+}
+async function saveUsers(u) {
+  await cloudSave('users', u);
+}
 
 /* ============ AUTH ============ */
-function signup() {
+async function signup() {
   const u = document.getElementById('su_user').value.trim();
   const p = document.getElementById('su_pass').value.trim();
   if (!u || !p) return showAlert('Preencha usuário e senha.');
-  const users = getUsers();
+  const users = await getUsers();
   if (users[u]) return showAlert('Esse usuário já existe.');
   users[u] = { password: p };
-  saveUsers(users);
+  await saveUsers(users);
   showAlert('Conta criada! Faça login.', 'ok');
   toggleForm('login');
 }
 
-function login() {
+async function login() {
   const u = document.getElementById('li_user').value.trim();
   const p = document.getElementById('li_pass').value.trim();
-  const users = getUsers();
+  const users = await getUsers();
   if (!users[u] || users[u].password !== p) return showAlert('Usuário ou senha inválidos.');
   currentUser = u;
-  localStorage.setItem('np_current', u);
-  startQuiz();
+  await cloudSave('current', u);
+  goToStart();
 }
 
 function logout() {
+  closeModal();
   currentUser = null;
-  localStorage.removeItem('np_current');
+  cloudDelete('current');
   goTo('homeScreen');
+}
+
+/* ============ MODAL ============ */
+function confirmLogout() {
+  document.getElementById('logoutModal').classList.add('open');
+}
+function closeModal() {
+  document.getElementById('logoutModal').classList.remove('open');
+}
+// close modal on overlay click
+document.getElementById('logoutModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+/* ============ START SCREEN ============ */
+async function goToStart() {
+  document.getElementById('startUserPill').textContent = '👤 ' + currentUser;
+  const data = await cloudGet(currentUser + '_data');
+  const btn = document.getElementById('viewDashBtn');
+  if (data && data.length > 0) {
+    lastDashData = data;
+    btn.style.display = 'block';
+  } else {
+    btn.style.display = 'none';
+  }
+  goTo('startScreen');
+}
+
+async function viewLastDash() {
+  if (!lastDashData) {
+    lastDashData = await cloudGet(currentUser + '_data');
+  }
+  if (lastDashData && lastDashData.length > 0) {
+    showDash(lastDashData);
+  }
 }
 
 /* ============ QUIZ ============ */
 function startQuiz() {
   step = 0;
   answers = {};
+  answerHistory = [];
   goTo('quizScreen');
   renderQ();
 }
@@ -765,66 +862,75 @@ function renderQ() {
   document.getElementById('quizOpts').innerHTML = q.opts.map(o =>
     `<button class="opt-btn" onclick="answer(${o[1]})">${o[0]}</button>`
   ).join('');
+  // show back button only after first question
+  document.getElementById('backBtn').style.display = step > 0 ? 'block' : 'none';
 }
 
 function answer(v) {
+  answerHistory.push({ step, answers: { ...answers } });
   answers[questions[step].key] = v;
   step++;
   if (step >= questions.length) finish();
   else renderQ();
 }
 
+function goBack() {
+  if (answerHistory.length === 0) return;
+  const prev = answerHistory.pop();
+  step = prev.step;
+  answers = prev.answers;
+  renderQ();
+}
+
 /* ============ SCORE ============ */
 function calcScores(a) {
   const g = (v) => v || 0;
-  // Energia: sono, horas_sono, energia_manha, energia, exercicio, alimentacao, hidratacao
   const energiaRaw = g(a.sono) + g(a.horas_sono) + g(a.energia_manha) + g(a.energia) + g(a.exercicio) + g(a.alimentacao) + g(a.hidratacao);
   const energia = Math.min(100, Math.round(energiaRaw * 100 / 70));
-  // Burnout: estresse, ansiedade, fadiga, carga, irritabilidade
-  const burnoutRaw = g(a.estresse) + g(a.ansiedade) + g(a.fadiga) + (g(a.carga) > 10 ? 10 : g(a.carga)) + (10 - g(a.irritabilidade)/10*10);
   const burnout = Math.min(100, Math.round((g(a.estresse) + g(a.ansiedade) + g(a.fadiga)) * 100 / 30));
-  // Bem-estar: humor, social, motivacao, autocuidado
   const bemestarRaw = g(a.humor) + g(a.social) + g(a.motivacao) + g(a.autocuidado);
   const bemestar = Math.min(100, Math.round(bemestarRaw * 100 / 40));
-  // Produtividade: foco, produtividade, pausas, carga
   const prodRaw = g(a.foco) + g(a.produtividade) + g(a.pausas);
   const produtividade = Math.min(100, Math.round(prodRaw * 100 / 30));
   return { burnout, energia, bemestar, produtividade };
 }
 
 /* ============ FINISH ============ */
-function finish() {
+async function finish() {
   const r = calcScores(answers);
   const key = currentUser + '_data';
-  const data = JSON.parse(localStorage.getItem(key) || '[]');
+  const data = (await cloudGet(key)) || [];
   data.push({ answers, r, date: new Date().toLocaleDateString('pt-BR') });
-  localStorage.setItem(key, JSON.stringify(data));
-  showDash();
+  await cloudSave(key, data);
+  lastDashData = data;
+  showDash(data);
 }
+
 
 /* ============ TOPIC DEFINITIONS ============ */
 const topicDefs = {
-  sono:           { label:'Sono',             icon:'😴', max:10,  desc:(v)=>v<=3?'Sono muito ruim. Prejudica memória, imunidade e humor. Prioridade máxima de cuidado.':v<=6?'Sono razoável. Pequenas melhorias na rotina noturna fariam grande diferença.':'Ótimo sono! É a base de toda saúde mental e desempenho cognitivo.' },
-  horas_sono:     { label:'Horas de Sono',    icon:'🕐', max:10,  desc:(v)=>v<=3?'Menos de 5h é insuficiente para a maioria dos adultos. O déficit acumula ao longo da semana.':v<=6?'Entre 5–6h — abaixo do ideal. Tente adiantar o horário de dormir gradualmente.':'Duração adequada! 7–8h por noite é o recomendado para adultos saudáveis.' },
-  energia_manha:  { label:'Energia ao Acordar',icon:'🌅',max:10,  desc:(v)=>v<=3?'Acordar exausto indica sono não restaurador ou ciclos interrompidos.':v<=6?'Energia moderada ao acordar. Evite telas antes de dormir para melhorar o descanso.':'Boa energia matinal! Sinal de sono de qualidade e ritmo circadiano saudável.' },
-  exercicio:      { label:'Exercício',        icon:'🏃', max:10,  desc:(v)=>v<=2?'Sem movimento corporal hoje. Exercício libera endorfina e regula o estresse.':v<=6?'Movimento moderado. Qualquer atividade física, mesmo caminhada, já é benéfica.':'Ótimo! Exercício regular reduz ansiedade, melhora sono e aumenta energia.' },
-  alimentacao:    { label:'Alimentação',      icon:'🥗', max:10,  desc:(v)=>v<=3?'Alimentação ruim impacta energia, humor e concentração diretamente.':v<=6?'Alimentação razoável. Tente incluir mais alimentos naturais e reduzir ultraprocessados.':'Muito bem! Boa nutrição é combustível direto para o cérebro e o corpo.' },
-  hidratacao:     { label:'Hidratação',       icon:'💧', max:10,  desc:(v)=>v<=3?'Desidratação causa fadiga, dor de cabeça e reduz a concentração em até 20%.':v<=6?'Hidratação abaixo do ideal. Tente manter uma garrafa de água sempre à mão.':'Excelente hidratação! Água é essencial para funções cognitivas e regulação de humor.' },
-  carga:          { label:'Carga Mental',     icon:'🧩', max:12,  desc:(v)=>v<=5?'Carga leve. Você tem espaço mental disponível para criatividade e aprendizado.':v<=9?'Carga moderada. Atenção para não acumular tarefas pendentes sem resolver.':'Sobrecarga cognitiva. O cérebro está no limite — pausas e delegação são urgentes.' },
-  foco:           { label:'Foco',             icon:'🎯', max:10,  desc:(v)=>v<=3?'Foco muito baixo. Verifique sono, hidratação e se há excesso de distrações digitais.':v<=6?'Foco moderado. Blocos de trabalho com timer (Pomodoro) podem ajudar muito.':'Foco excelente! Aproveite esse estado para suas tarefas mais desafiadoras.' },
-  produtividade:  { label:'Produtividade',    icon:'✅', max:10,  desc:(v)=>v<=3?'Dia pouco produtivo. Analise se foi por falta de energia, foco ou excesso de interrupções.':v<=6?'Produtividade parcial. Revisar prioridades e eliminar tarefas menores pode ajudar.':'Alta produtividade! Resultado de boa gestão de energia e foco.' },
-  estresse:       { label:'Estresse',         icon:'⚡', max:10,  desc:(v)=>v<=3?'Nível saudável. Estresse baixo favorece clareza mental e bem-estar.':v<=6?'Estresse moderado. Monitore: se persistir por dias, impacta sono e saúde física.':'Estresse elevado. Cortisol alto de forma crônica afeta memória, imunidade e coração.' },
-  ansiedade:      { label:'Ansiedade',        icon:'🌀', max:10,  desc:(v)=>v<=3?'Ansiedade controlada. Você está em equilíbrio emocional hoje.':v<=6?'Ansiedade moderada. Respiração abdominal e pausas ajudam a regular o sistema nervoso.':'Ansiedade alta. Considere técnicas de mindfulness, reduzir cafeína e falar com alguém.' },
-  humor:          { label:'Humor',            icon:'😊', max:10,  desc:(v)=>v<=3?'Humor muito baixo. Isso pode ser sinal de esgotamento, conflitos ou privação de sono.':v<=6?'Humor neutro. Pequenos atos de prazer ou gratidão podem elevar o estado emocional.':'Humor positivo! Um indicador forte de equilíbrio emocional e bem-estar geral.' },
-  irritabilidade: { label:'Irritabilidade',   icon:'😤', max:10,  desc:(v)=>v<=3?'Alta irritabilidade hoje. Costuma ser sinal de cansaço, fome, estresse ou sobrecarga.':v<=6?'Alguma impaciência. Fique atento ao que gatilhou — sono e alimentação costumam ser a causa.':'Ótimo equilíbrio emocional. Baixa irritabilidade indica boa regulação do sistema nervoso.' },
-  tela:           { label:'Tempo de Tela',    icon:'📱', max:10,  desc:(v)=>v<=3?'Ótimo equilíbrio digital. Menos tela = mais foco, menos fadiga e melhor sono.':v<=6?'Tempo de tela moderado. Tente pausas de 20min a cada 2h de uso.':'Muitas horas de tela aumentam fadiga ocular, ansiedade e prejudicam o sono.' },
-  fadiga:         { label:'Fadiga Digital',   icon:'🥴', max:10,  desc:(v)=>v<=3?'Baixa fadiga digital. Seu sistema nervoso está bem descansado.':v<=6?'Fadiga moderada. Reduza notificações e tente desconectar pelo menos 1h antes de dormir.':'Fadiga digital alta. O excesso de estímulos digitais esgota concentração e criatividade.' },
-  pausas:         { label:'Pausas',           icon:'☕', max:10,  desc:(v)=>v<=2?'Poucas pausas aumentam o erro cognitivo e a fadiga acumulada ao longo do dia.':v<=6?'Algumas pausas. A técnica Pomodoro (25min foco / 5min pausa) pode ajudar bastante.':'Excelente! Pausas regulares recarregam o foco, reduzem erros e aumentam criatividade.' },
-  social:         { label:'Conexão Social',   icon:'🤝', max:10,  desc:(v)=>v<=3?'Isolamento social prolongado aumenta cortisol e risco de depressão.':v<=6?'Contato social limitado. Mesmo mensagens curtas com pessoas queridas ajudam.':'Ótimas conexões! Vínculos sociais saudáveis são um dos maiores fatores de bem-estar.' },
-  motivacao:      { label:'Motivação',        icon:'🔥', max:10,  desc:(v)=>v<=3?'Motivação muito baixa. Pode indicar esgotamento, falta de propósito ou depressão leve.':v<=6?'Motivação moderada. Conectar tarefas a seus valores pessoais pode ajudar.':'Alta motivação! Senso de propósito é protetor contra burnout e estresse crônico.' },
-  autocuidado:    { label:'Autocuidado',      icon:'🌿', max:10,  desc:(v)=>v<=3?'Pouco autocuidado hoje. Lembre: você não pode servir de um copo vazio.':v<=6?'Autocuidado parcial. Tente reservar pelo menos 15 minutos diários para si mesmo.':'Ótimo autocuidado! Investir em si mesmo aumenta resiliência e qualidade de vida.' },
-  energia:        { label:'Energia Final',    icon:'⚡', max:10,  desc:(v)=>v<=3?'Energia esgotada ao final do dia. Priorize descanso e evite decisões importantes agora.':v<=6?'Energia moderada. Uma caminhada curta ou desconexão digital pode ajudar a recarregar.':'Boa energia no fim do dia! Resultado direto de sono, hidratação e hábitos saudáveis.' },
+  sono:           { label:'Sono',              icon:'😴', max:10,  desc:(v)=>v<=3?'Sono muito ruim. Prejudica memória, imunidade e humor. Prioridade máxima de cuidado.':v<=6?'Sono razoável. Pequenas melhorias na rotina noturna fariam grande diferença.':'Ótimo sono! É a base de toda saúde mental e desempenho cognitivo.' },
+  horas_sono:     { label:'Horas de Sono',     icon:'🕐', max:10,  desc:(v)=>v<=3?'Menos de 5h é insuficiente para a maioria dos adultos.':v<=6?'Entre 5 a 6h — abaixo do ideal.':'7 a 8h por noite: duração adequada para adultos saudáveis.' },
+  energia_manha:  { label:'Energia ao Acordar',icon:'🌅', max:10,  desc:(v)=>v<=3?'Acordar exausto indica sono não restaurador.':v<=6?'Energia moderada ao acordar. Evite telas antes de dormir.':'Boa energia matinal! Sinal de sono de qualidade.' },
+  exercicio:      { label:'Exercício',         icon:'🏃', max:10,  desc:(v)=>v<=2?'Sem movimento corporal hoje. Exercício libera endorfina e regula o estresse.':v<=6?'Movimento moderado. Qualquer atividade física já é benéfica.':'Ótimo! Exercício regular reduz ansiedade e melhora sono.' },
+  alimentacao:    { label:'Alimentação',       icon:'🥗', max:10,  desc:(v)=>v<=3?'Alimentação ruim impacta energia, humor e concentração.':v<=6?'Alimentação razoável. Tente incluir mais alimentos naturais.':'Muito bem! Boa nutrição é combustível direto para o cérebro.' },
+  hidratacao:     { label:'Hidratação',        icon:'💧', max:10,  desc:(v)=>v<=3?'Desidratação causa fadiga e reduz concentração em até 20%.':v<=6?'Hidratação abaixo do ideal.':'Excelente hidratação! Essencial para funções cognitivas.' },
+  carga:          { label:'Carga Mental',      icon:'🧩', max:12,  desc:(v)=>v<=5?'Carga leve. Você tem espaço mental para criatividade.':v<=9?'Carga moderada. Não acumule tarefas pendentes.':'Sobrecarga cognitiva. Pausas e delegação são urgentes.' },
+  foco:           { label:'Foco',              icon:'🎯', max:10,  desc:(v)=>v<=3?'Foco muito baixo. Verifique sono, hidratação e distrações.':v<=6?'Foco moderado. Blocos de trabalho com timer ajudam.':'Foco excelente! Aproveite para suas tarefas mais desafiadoras.' },
+  produtividade:  { label:'Produtividade',     icon:'✅', max:10,  desc:(v)=>v<=3?'Dia pouco produtivo. Analise falta de energia ou excesso de interrupções.':v<=6?'Produtividade parcial. Revisar prioridades pode ajudar.':'Alta produtividade! Resultado de boa gestão de energia e foco.' },
+  estresse:       { label:'Estresse',          icon:'⚡', max:10,  desc:(v)=>v<=3?'Nível saudável. Estresse baixo favorece clareza mental.':v<=6?'Estresse moderado. Se persistir, afeta sono e saúde física.':'Estresse elevado. Cortisol alto cronicamente afeta memória e imunidade.' },
+  ansiedade:      { label:'Ansiedade',         icon:'🌀', max:10,  desc:(v)=>v<=3?'Ansiedade controlada. Você está em equilíbrio emocional.':v<=6?'Ansiedade moderada. Respiração abdominal e pausas ajudam.':'Ansiedade alta. Considere mindfulness e conversar com alguém.' },
+  humor:          { label:'Humor',             icon:'😊', max:10,  desc:(v)=>v<=3?'Humor muito baixo. Pode ser sinal de esgotamento ou privação de sono.':v<=6?'Humor neutro. Pequenos atos de prazer ajudam a elevar.':'Humor positivo! Indicador de equilíbrio emocional e bem-estar.' },
+  irritabilidade: { label:'Irritabilidade',    icon:'😤', max:10,  desc:(v)=>v<=3?'Alta irritabilidade. Geralmente sinal de cansaço, fome ou sobrecarga.':v<=6?'Alguma impaciência. Sono e alimentação costumam ser a causa.':'Ótimo equilíbrio emocional. Baixa irritabilidade é boa regulação nervosa.' },
+  tela:           { label:'Tempo de Tela',     icon:'📱', max:10,  desc:(v)=>v<=3?'Ótimo equilíbrio digital. Menos tela, mais foco e melhor sono.':v<=6?'Tela moderada. Tente pausas de 20min a cada 2h de uso.':'Muitas horas de tela aumentam fadiga e prejudicam o sono.' },
+  fadiga:         { label:'Fadiga Digital',    icon:'🥴', max:10,  desc:(v)=>v<=3?'Baixa fadiga digital. Seu sistema nervoso está descansado.':v<=6?'Fadiga moderada. Reduza notificações e desconecte mais cedo.':'Fadiga digital alta. O excesso de estímulos esgota a concentração.' },
+  pausas:         { label:'Pausas',            icon:'☕', max:10,  desc:(v)=>v<=2?'Poucas pausas aumentam o erro cognitivo e a fadiga acumulada.':v<=6?'Algumas pausas. A técnica Pomodoro (25min/5min) pode ajudar.':'Excelente! Pausas regulares recarregam foco e criatividade.' },
+  social:         { label:'Conexão Social',    icon:'🤝', max:10,  desc:(v)=>v<=3?'Isolamento social prolonga estresse e aumenta risco de depressão.':v<=6?'Contato social limitado. Mensagens curtas com pessoas queridas ajudam.':'Ótimas conexões! Vínculos saudáveis são fator chave de bem-estar.' },
+  motivacao:      { label:'Motivação',         icon:'🔥', max:10,  desc:(v)=>v<=3?'Motivação muito baixa. Pode indicar esgotamento ou falta de propósito.':v<=6?'Motivação moderada. Conectar tarefas a seus valores pessoais ajuda.':'Alta motivação! Senso de propósito protege contra burnout.' },
+  autocuidado:    { label:'Autocuidado',       icon:'🌿', max:10,  desc:(v)=>v<=3?'Pouco autocuidado hoje. Você não pode servir de um copo vazio.':v<=6?'Autocuidado parcial. Reserve pelo menos 15 minutos diários para si.':'Ótimo autocuidado! Investir em si aumenta resiliência e qualidade de vida.' },
+  energia:        { label:'Energia Final',     icon:'⚡', max:10,  desc:(v)=>v<=3?'Energia esgotada. Priorize descanso e evite decisões importantes agora.':v<=6?'Energia moderada. Uma pausa ou caminhada pode recarregar.':'Boa energia no fim do dia! Resultado de sono, hidratação e bons hábitos.' },
 };
+
 const legendDefs = [
   { icon:'⚡', title:'Energia',         desc:'Score composto de sono, energia ao acordar/encerrar o dia, exercício, alimentação e hidratação. Representa sua capacidade física e mental de agir.' },
   { icon:'🔥', title:'Burnout',         desc:'Calculado com estresse, ansiedade e fadiga digital. Indica risco de esgotamento acumulado. Acima de 70 requer atenção imediata.' },
@@ -832,18 +938,18 @@ const legendDefs = [
   { icon:'✅', title:'Produtividade',   desc:'Combinação de foco, conclusão de tarefas e pausas. Mede sua eficiência cognitiva, não apenas volume de trabalho.' },
   { icon:'😴', title:'Sono',            desc:'Qualidade e duração do sono. É o indicador mais poderoso de saúde mental — afeta todos os outros indicadores.' },
   { icon:'🏃', title:'Exercício',       desc:'Movimento corporal. Libera endorfinas, regula cortisol e melhora qualidade do sono. Mesmo 20 min de caminhada contam.' },
-  { icon:'🥗', title:'Alimentação',     desc:'Qualidade do que você comeu. O intestino é considerado o "segundo cérebro" — alimentação afeta diretamente humor e energia.' },
+  { icon:'🥗', title:'Alimentação',     desc:'Qualidade do que você comeu. O intestino é o segundo cérebro — alimentação afeta diretamente humor e energia.' },
   { icon:'💧', title:'Hidratação',      desc:'Nível de ingestão de água. Desidratação leve (2%) já reduz concentração e aumenta sensação de fadiga.' },
   { icon:'🧩', title:'Carga Mental',    desc:'Volume de demandas cognitivas: decisões, problemas, informações novas. Alta carga sem descanso leva ao esgotamento.' },
   { icon:'🌀', title:'Ansiedade',       desc:'Sensação de preocupação ou nervosismo. Alta ansiedade reduz foco, qualidade do sono e pode causar sintomas físicos.' },
   { icon:'😊', title:'Humor',           desc:'Estado emocional geral do dia. Influenciado por sono, exercício, interações sociais e eventos externos.' },
-  { icon:'😤', title:'Irritabilidade',  desc:'Impaciência e reatividade emocional. Alta irritabilidade é frequentemente sinal de cansaço, fome ou sobrecarga.' },
-  { icon:'📱', title:'Tempo de Tela',   desc:'Horas de exposição a dispositivos. Acima de 6h/dia está associado a fadiga ocular, piora do sono e ansiedade.' },
-  { icon:'🥴', title:'Fadiga Digital',  desc:'Cansaço causado pelo uso intenso de tecnologia e sobrecarga informacional. Reduz criatividade e paciência.' },
-  { icon:'☕', title:'Pausas',          desc:'Intervalos deliberados ao longo do dia. Pausas regulares restauram foco, reduzem erros e previnem burnout.' },
-  { icon:'🤝', title:'Conexão Social',  desc:'Qualidade das interações com outras pessoas. Vínculos sociais saudáveis são um dos maiores preditores de bem-estar.' },
+  { icon:'😤', title:'Irritabilidade',  desc:'Impaciência e reatividade emocional. Alta irritabilidade é sinal de cansaço, fome ou sobrecarga.' },
+  { icon:'📱', title:'Tempo de Tela',   desc:'Horas de exposição a dispositivos. Acima de 6h por dia está associado a fadiga ocular, piora do sono e ansiedade.' },
+  { icon:'🥴', title:'Fadiga Digital',  desc:'Cansaço causado pelo uso intenso de tecnologia. Reduz criatividade e paciência.' },
+  { icon:'☕', title:'Pausas',          desc:'Intervalos deliberados ao longo do dia. Restauram foco, reduzem erros e previnem burnout.' },
+  { icon:'🤝', title:'Conexão Social',  desc:'Qualidade das interações com outras pessoas. Vínculos saudáveis são um dos maiores preditores de bem-estar.' },
   { icon:'🔥', title:'Motivação',       desc:'Senso de propósito e direção. Motivação intrínseca (valores pessoais) é mais sustentável que motivação extrínseca.' },
-  { icon:'🌿', title:'Autocuidado',     desc:'Ações intencionais para preservar sua saúde física e mental. Inclui descanso, lazer, limites e atividades prazerosas.' },
+  { icon:'🌿', title:'Autocuidado',     desc:'Ações intencionais para preservar saúde física e mental. Inclui descanso, lazer, limites e atividades prazerosas.' },
 ];
 
 /* ============ HELPERS ============ */
@@ -855,29 +961,25 @@ function levelClass(val, max) {
 }
 
 function statusFromScores(energia, burnout, bemestar) {
-  if (energia >= 70 && burnout <= 35 && bemestar >= 70) return { cls:'ok',  icon:'✅', msg:'Dia excelente! Energia alta, burnout baixo e bem-estar elevado. Ótimo momento para tarefas exigentes e conexões importantes.' };
-  if (energia >= 70 && burnout <= 40) return { cls:'ok',  icon:'✅', msg:'Você está bem hoje! Energia alta e risco de burnout baixo. Ótimo momento para tarefas que exigem foco.' };
-  if (burnout >= 75)                  return { cls:'bad', icon:'🚨', msg:'Sinal crítico: burnout muito alto. Priorize descanso completo, evite novas demandas e considere falar com alguém.' };
-  if (burnout >= 60)                  return { cls:'bad', icon:'⚠️', msg:'Burnout elevado detectado. Reduza a carga de trabalho, aumente pausas e cuide do sono esta noite.' };
-  if (energia <= 30)                  return { cls:'bad', icon:'🪫', msg:'Energia crítica. Evite decisões importantes, priorize descanso e verifique sono, alimentação e hidratação.' };
-  if (bemestar <= 35)                 return { cls:'warn', icon:'💛', msg:'Bem-estar emocional baixo hoje. Tente se conectar com alguém de confiança ou fazer algo que te dê prazer.' };
-  return { cls:'warn', icon:'⚠️', msg:'Dia moderado. Há pontos de atenção — veja a análise detalhada abaixo para entender onde focar.' };
+  if (energia >= 70 && burnout <= 35 && bemestar >= 70) return { cls:'ok',  icon:'✅', msg:'Dia excelente! Energia alta, burnout baixo e bem-estar elevado. Ótimo momento para tarefas exigentes.' };
+  if (energia >= 70 && burnout <= 40) return { cls:'ok',  icon:'✅', msg:'Você está bem hoje! Energia alta e risco de burnout baixo.' };
+  if (burnout >= 75) return { cls:'bad', icon:'🚨', msg:'Sinal crítico: burnout muito alto. Priorize descanso completo e evite novas demandas.' };
+  if (burnout >= 60) return { cls:'bad', icon:'⚠️', msg:'Burnout elevado. Reduza a carga de trabalho, aumente pausas e cuide do sono esta noite.' };
+  if (energia <= 30) return { cls:'bad', icon:'🪫', msg:'Energia crítica. Evite decisões importantes e priorize descanso.' };
+  if (bemestar <= 35) return { cls:'warn', icon:'💛', msg:'Bem-estar emocional baixo. Tente se conectar com alguém de confiança ou fazer algo prazeroso.' };
+  return { cls:'warn', icon:'⚠️', msg:'Dia moderado. Veja a análise detalhada abaixo para entender onde focar.' };
 }
 
 /* ============ DASH ============ */
-function showDash() {
+function showDash(data) {
   goTo('dashScreen');
-  const key = currentUser + '_data';
-  const data = JSON.parse(localStorage.getItem(key) || '[]');
   const last = data[data.length - 1];
   const a = last.answers;
 
   document.getElementById('userPill').textContent = '👤 ' + currentUser;
 
   const lbl = (v, inv) => {
-    if (inv) { // lower is better (burnout, estresse)
-      return v >= 70 ? 'Alto 🔴' : v >= 45 ? 'Médio 🟡' : 'Baixo 💚';
-    }
+    if (inv) return v >= 70 ? 'Alto 🔴' : v >= 45 ? 'Médio 🟡' : 'Baixo 💚';
     return v >= 70 ? 'Alto 💚' : v >= 45 ? 'Médio 🟡' : 'Baixo 🔴';
   };
 
@@ -891,31 +993,29 @@ function showDash() {
   document.getElementById('scoreBemestar').textContent = last.r.bemestar;
   document.getElementById('scoreProd').textContent     = last.r.produtividade;
 
-  document.getElementById('subEnergy').textContent    = lbl(last.r.energia, false);
-  document.getElementById('subBurnout').textContent   = lbl(last.r.burnout, true);
-  document.getElementById('subFoco').textContent      = lbl(focoPct, false);
-  document.getElementById('subEstresse').textContent  = lbl(estPct, true);
-  document.getElementById('subBemestar').textContent  = lbl(last.r.bemestar, false);
-  document.getElementById('subProd').textContent      = lbl(last.r.produtividade, false);
+  document.getElementById('subEnergy').textContent   = lbl(last.r.energia, false);
+  document.getElementById('subBurnout').textContent  = lbl(last.r.burnout, true);
+  document.getElementById('subFoco').textContent     = lbl(focoPct, false);
+  document.getElementById('subEstresse').textContent = lbl(estPct, true);
+  document.getElementById('subBemestar').textContent = lbl(last.r.bemestar, false);
+  document.getElementById('subProd').textContent     = lbl(last.r.produtividade, false);
 
-  // status badge
   const st = statusFromScores(last.r.energia, last.r.burnout, last.r.bemestar);
   const badge = document.getElementById('statusBadge');
-  badge.className = `status-badge ${st.cls} mb2`;
-  badge.innerHTML = `<span class="icon">${st.icon}</span><span>${st.msg}</span>`;
+  badge.className = 'status-badge ' + st.cls + ' mb2';
+  badge.innerHTML = '<span class="icon">' + st.icon + '</span><span>' + st.msg + '</span>';
 
-  // --- LINE CHART ---
   if (lineChartInst) lineChartInst.destroy();
   const lineCtx = document.getElementById('lineChart').getContext('2d');
   lineChartInst = new Chart(lineCtx, {
     type:'line',
     data:{
-      labels: data.map((d,i) => d.date || `Dia ${i+1}`),
+      labels: data.map((d,i) => d.date || 'Dia '+(i+1)),
       datasets:[
-        { label:'Energia',      data:data.map(d=>d.r.energia),      borderColor:'#4ade80', backgroundColor:'rgba(74,222,128,0.07)',  tension:.4, fill:true, pointRadius:3 },
-        { label:'Burnout',      data:data.map(d=>d.r.burnout),      borderColor:'#f43f5e', backgroundColor:'rgba(244,63,94,0.07)',   tension:.4, fill:true, pointRadius:3 },
-        { label:'Bem-estar',    data:data.map(d=>d.r.bemestar),     borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,0.07)', tension:.4, fill:true, pointRadius:3 },
-        { label:'Produtividade',data:data.map(d=>d.r.produtividade),borderColor:'#34d399', backgroundColor:'rgba(52,211,153,0.07)',  tension:.4, fill:true, pointRadius:3 },
+        { label:'Energia',       data:data.map(d=>d.r.energia),       borderColor:'#4ade80', backgroundColor:'rgba(74,222,128,0.07)',  tension:.4, fill:true, pointRadius:3 },
+        { label:'Burnout',       data:data.map(d=>d.r.burnout),       borderColor:'#f43f5e', backgroundColor:'rgba(244,63,94,0.07)',   tension:.4, fill:true, pointRadius:3 },
+        { label:'Bem-estar',     data:data.map(d=>d.r.bemestar),      borderColor:'#a78bfa', backgroundColor:'rgba(167,139,250,0.07)', tension:.4, fill:true, pointRadius:3 },
+        { label:'Produtividade', data:data.map(d=>d.r.produtividade), borderColor:'#34d399', backgroundColor:'rgba(52,211,153,0.07)',  tension:.4, fill:true, pointRadius:3 },
       ]
     },
     options:{
@@ -928,76 +1028,41 @@ function showDash() {
     }
   });
 
-  // --- RADAR CHART ---
   if (radarChartInst) radarChartInst.destroy();
   const radarCtx = document.getElementById('radarChart').getContext('2d');
   radarChartInst = new Chart(radarCtx, {
     type:'radar',
     data:{
       labels:['Sono','Estresse','Carga','Tela','Fadiga','Foco','Humor','Motivação'],
-      datasets:[{
-        label:'Hoje',
-        data:[ a.sono||0, a.estresse||0, a.carga||0, a.tela||0, a.fadiga||0, a.foco||0, a.humor||0, a.motivacao||0 ],
-        borderColor:'#4ade80', backgroundColor:'rgba(74,222,128,0.15)', pointBackgroundColor:'#4ade80'
-      }]
+      datasets:[{ label:'Hoje', data:[a.sono||0, a.estresse||0, a.carga||0, a.tela||0, a.fadiga||0, a.foco||0, a.humor||0, a.motivacao||0], borderColor:'#4ade80', backgroundColor:'rgba(74,222,128,0.15)', pointBackgroundColor:'#4ade80' }]
     },
-    options:{
-      responsive:true,
-      plugins:{ legend:{ labels:{ color:'#b0bac8' } } },
-      scales:{ r:{ ticks:{ color:'#6b7a90', backdropColor:'transparent' }, grid:{ color:'#2a3240' }, pointLabels:{ color:'#b0bac8', font:{ family:'DM Sans', size:11 } } } }
-    }
+    options:{ responsive:true, plugins:{ legend:{ labels:{ color:'#b0bac8' } } }, scales:{ r:{ ticks:{ color:'#6b7a90', backdropColor:'transparent' }, grid:{ color:'#2a3240' }, pointLabels:{ color:'#b0bac8', font:{ family:'DM Sans', size:11 } } } } }
   });
 
-  // --- TOPIC CARDS (all 20 keys) ---
-  const topicGrid = document.getElementById('topicCards');
-  const keys = ['sono','horas_sono','energia_manha','exercicio','alimentacao','hidratacao',
-                 'carga','foco','produtividade','estresse','ansiedade','humor','irritabilidade',
-                 'tela','fadiga','pausas','social','motivacao','autocuidado','energia'];
-  topicGrid.innerHTML = keys.filter(k => a[k] !== undefined).map(k => {
-    const def = topicDefs[k];
-    if (!def) return '';
+  const keys = ['sono','horas_sono','energia_manha','exercicio','alimentacao','hidratacao','carga','foco','produtividade','estresse','ansiedade','humor','irritabilidade','tela','fadiga','pausas','social','motivacao','autocuidado','energia'];
+  document.getElementById('topicCards').innerHTML = keys.filter(k => a[k] !== undefined).map(k => {
+    const def = topicDefs[k]; if (!def) return '';
     const val = a[k] || 0;
     const pct = Math.min(100, Math.round((val / def.max) * 100));
     const lvl = levelClass(val, def.max);
-    return `<div class="topic-card">
-      <div class="t-header">
-        <span class="t-name">${def.icon} ${def.label}</span>
-        <span class="t-val t-${lvl}">${pct}</span>
-      </div>
-      <div class="t-bar-bg"><div class="t-bar-fill fill-${lvl}" style="width:${pct}%"></div></div>
-      <div class="t-reason">${def.desc(val)}</div>
-    </div>`;
+    return '<div class="topic-card"><div class="t-header"><span class="t-name">'+def.icon+' '+def.label+'</span><span class="t-val t-'+lvl+'">'+pct+'</span></div><div class="t-bar-bg"><div class="t-bar-fill fill-'+lvl+'" style="width:'+pct+'%"></div></div><div class="t-reason">'+def.desc(val)+'</div></div>';
   }).join('');
 
-  // --- LEGEND ---
   document.getElementById('legendGrid').innerHTML = legendDefs.map(l =>
-    `<div class="legend-item">
-      <span class="legend-icon">${l.icon}</span>
-      <div class="legend-body">
-        <div class="legend-title">${l.title}</div>
-        <div class="legend-desc">${l.desc}</div>
-      </div>
-    </div>`
+    '<div class="legend-item"><span class="legend-icon">'+l.icon+'</span><div class="legend-body"><div class="legend-title">'+l.title+'</div><div class="legend-desc">'+l.desc+'</div></div></div>'
   ).join('');
 
-  // --- HISTORY ---
-  const list = document.getElementById('historyList');
-  list.innerHTML = data.slice().reverse().map((d,i) =>
-    `<li class="history-item">
-      <span class="history-day">${d.date || 'Dia '+(data.length-i)}</span>
-      <span class="history-vals">
-        <span class="tag e">⚡ ${d.r.energia}</span>
-        <span class="tag b">🔥 ${d.r.burnout}</span>
-        <span class="tag w">💛 ${d.r.bemestar||'—'}</span>
-        <span class="tag p">✅ ${d.r.produtividade||'—'}</span>
-      </span>
-    </li>`
+  document.getElementById('historyList').innerHTML = data.slice().reverse().map((d,i) =>
+    '<li class="history-item"><span class="history-day">'+(d.date||'Dia '+(data.length-i))+'</span><span class="history-vals"><span class="tag e">⚡ '+d.r.energia+'</span><span class="tag b">🔥 '+d.r.burnout+'</span><span class="tag w">💛 '+(d.r.bemestar||'—')+'</span><span class="tag p">✅ '+(d.r.produtividade||'—')+'</span></span></li>'
   ).join('');
 }
 
 /* ============ AUTO LOGIN ============ */
-const saved = localStorage.getItem('np_current');
-if (saved) { currentUser = saved; startQuiz(); }
+(async () => {
+  const saved = await cloudGet('current');
+  if (saved) { currentUser = saved; goToStart(); }
+})();
+
 </script>
 </body>
 </html>
