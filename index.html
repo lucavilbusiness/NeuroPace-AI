@@ -3,228 +3,305 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#0d1117">
+<meta name="theme-color" content="#f5f0e8">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="NeuroPace">
-<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;NeuroPace IA&quot;,&quot;short_name&quot;:&quot;NeuroPace&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;#0d1117&quot;,&quot;theme_color&quot;:&quot;#4ade80&quot;}">
-<title>NeuroPace IA</title>
+<title>NeuroPace</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#0d1117; --surface:#161b22; --surface2:#1e2530; --border:#2a3240;
-  --accent:#4ade80; --danger:#f43f5e; --warn:#f97316; --purple:#a78bfa; --blue:#60a5fa; --teal:#34d399;
-  --muted:#6b7a90; --text:#e8edf5; --text2:#b0bac8;
-  --radius:16px; --font-head:'Syne',sans-serif; --font-body:'DM Sans',sans-serif;
+  --bg: #f5f0e8;
+  --surface: #faf7f2;
+  --surface2: #efe9dc;
+  --border: #c9bfa8;
+  --border-light: #ddd5c4;
+  --gold: #9a7d4a;
+  --gold-light: #c4a36a;
+  --green: #2d4a3e;
+  --green-mid: #3d6456;
+  --green-light: #e8ede9;
+  --danger: #7a2828;
+  --warn: #7a4a1e;
+  --muted: #8a7d6a;
+  --text: #1c1710;
+  --text2: #5a4f3e;
+  --radius: 4px;
+  --font-head: 'Playfair Display', Georgia, serif;
+  --font-body: 'EB Garamond', Georgia, serif;
 }
-[data-theme="light"] {
-  --bg:#f0f4f8; --surface:#ffffff; --surface2:#f0f4f8; --border:#d1dae6;
-  --muted:#7a8a9a; --text:#1a2233; --text2:#4a5a6a;
+[data-theme="dark"] {
+  --bg: #0e0d0a;
+  --surface: #161410;
+  --surface2: #1e1b15;
+  --border: #3a3328;
+  --border-light: #2e2a22;
+  --gold: #c4a36a;
+  --gold-light: #9a7d4a;
+  --green: #4a7a6a;
+  --green-mid: #3a6055;
+  --green-light: #1a2420;
+  --muted: #7a6e5e;
+  --text: #f0eadc;
+  --text2: #b0a090;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
-body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:20px;overflow-x:hidden;transition:background .3s,color .3s;}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 60% 50% at 20% 20%,rgba(74,222,128,.06) 0%,transparent 60%),radial-gradient(ellipse 50% 40% at 80% 80%,rgba(249,115,22,.04) 0%,transparent 60%);pointer-events:none;z-index:0;}
-.wrapper{width:100%;max-width:580px;position:relative;z-index:1;padding-top:16px;}
+body{
+  font-family:var(--font-body);
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  padding:32px 16px;
+  font-size:17px;
+  line-height:1.7;
+  transition:background .4s,color .4s;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:-1;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Crect width='80' height='80' fill='none'/%3E%3Cpath d='M0 0h80v1H0z' fill='%23c9bfa8' opacity='.06'/%3E%3C/svg%3E"),
+    var(--bg);
+}
+.wrapper{width:100%;max-width:560px;position:relative;z-index:1;}
 
-.screen{display:none;opacity:0;transform:translateY(16px);transition:opacity .3s ease,transform .3s ease;}
+.ornament{text-align:center;color:var(--gold);font-size:1.1rem;letter-spacing:.5em;margin:8px 0 20px;opacity:.6;}
+.rule{border:none;border-top:1px solid var(--border);margin:20px 0;}
+.rule-gold{border-top-color:var(--gold);opacity:.4;}
+.double-rule{position:relative;border-top:1px solid var(--border);margin:24px 0;}
+.double-rule::after{content:'';position:absolute;top:3px;left:0;right:0;border-top:1px solid var(--border-light);}
+
+.screen{display:none;opacity:0;transform:translateY(10px);transition:opacity .35s ease,transform .35s ease;}
 .screen.active{display:block;opacity:1;transform:translateY(0);}
 
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px 28px;box-shadow:0 20px 60px rgba(0,0,0,.3);margin-bottom:16px;}
-@media(max-width:480px){.card{padding:24px 18px;}}
+.card{background:var(--surface);border:1px solid var(--border);padding:40px 36px;margin-bottom:16px;position:relative;}
+.card::before{content:'';position:absolute;top:6px;left:6px;right:-6px;bottom:-6px;border:1px solid var(--border-light);z-index:-1;pointer-events:none;}
+@media(max-width:480px){.card{padding:28px 20px;}.card::before{display:none;}}
 
-h1{font-family:var(--font-head);font-size:2.2rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;}
-h2{font-family:var(--font-head);font-size:1.4rem;font-weight:700;letter-spacing:-.02em;margin-bottom:20px;}
-h3{font-family:var(--font-head);font-size:.75rem;font-weight:600;margin-bottom:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;}
-p{color:var(--text2);line-height:1.6;}
+h1{font-family:var(--font-head);font-size:2.4rem;font-weight:400;letter-spacing:-.01em;line-height:1.15;font-style:italic;}
+h2{font-family:var(--font-head);font-size:1.5rem;font-weight:500;letter-spacing:.01em;margin-bottom:20px;}
+h3{font-size:.72rem;font-weight:500;margin-bottom:12px;color:var(--gold);text-transform:uppercase;letter-spacing:.18em;font-family:var(--font-body);}
+p{color:var(--text2);line-height:1.7;font-size:.95rem;}
 
-.logo-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:999px;padding:6px 14px;font-size:.8rem;font-weight:600;color:var(--accent);margin-bottom:20px;letter-spacing:.05em;}
+.logo-mark{display:inline-flex;align-items:center;gap:10px;color:var(--text);font-family:var(--font-head);font-size:.78rem;font-weight:500;letter-spacing:.25em;text-transform:uppercase;}
+.logo-mark .crest{width:28px;height:28px;border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:.72rem;font-style:italic;font-family:var(--font-head);}
 
-.field{margin-bottom:14px;}
-.field label{display:block;font-size:.75rem;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.07em;}
-input[type=text],input[type=password],textarea{width:100%;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:.95rem;outline:none;transition:border-color .2s;resize:vertical;}
-input:focus,textarea:focus{border-color:var(--accent);}
+.field{margin-bottom:18px;}
+.field label{display:block;font-size:.7rem;font-weight:500;color:var(--gold);margin-bottom:6px;text-transform:uppercase;letter-spacing:.18em;}
+input[type=text],input[type=password],textarea{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border);border-radius:0;color:var(--text);font-family:var(--font-body);font-size:1rem;outline:none;transition:border-color .2s;resize:vertical;}
+input:focus,textarea:focus{border-color:var(--gold);}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.7;font-style:italic;}
 
-.btn{width:100%;padding:13px 20px;border:none;border-radius:10px;font-family:var(--font-head);font-size:.92rem;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:transform .15s,opacity .15s,background .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn:active{transform:scale(.97);}
-.btn-primary{background:var(--accent);color:#0a1a0f;}
-.btn-primary:hover{opacity:.9;}
-.btn-secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border);}
-.btn-secondary:hover{border-color:var(--accent);color:var(--accent);}
-.btn-ghost{background:transparent;color:var(--muted);font-family:var(--font-body);font-size:.88rem;font-weight:400;}
-.btn-danger{background:rgba(244,63,94,.15);color:var(--danger);border:1px solid rgba(244,63,94,.3);}
-.btn-danger:hover{background:var(--danger);color:#fff;}
-.mt{margin-top:10px;} .mt2{margin-top:20px;} .mb{margin-bottom:8px;} .mb2{margin-bottom:20px;}
-.btn-row{display:flex;gap:10px;} .btn-row .btn{flex:1;}
-.divider{display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--muted);font-size:.8rem;}
+.btn{width:100%;padding:13px 24px;border:1px solid var(--border);border-radius:0;font-family:var(--font-body);font-size:.88rem;font-weight:500;cursor:pointer;letter-spacing:.12em;text-transform:uppercase;transition:all .22s;display:flex;align-items:center;justify-content:center;gap:8px;position:relative;z-index:2;}
+.btn:active{transform:scale(.98);}
+.btn-primary{background:var(--green);color:#f0ead8;border-color:var(--green);}
+.btn-primary:hover{background:var(--green-mid);border-color:var(--green-mid);}
+.btn-secondary{background:transparent;color:var(--text2);border-color:var(--border);}
+.btn-secondary:hover{border-color:var(--gold);color:var(--gold);}
+.btn-ghost{background:transparent;color:var(--muted);font-size:.8rem;border-color:transparent;letter-spacing:.1em;}
+.btn-ghost:hover{color:var(--text2);}
+.btn-danger{background:transparent;color:var(--danger);border-color:rgba(122,40,40,.3);}
+.btn-danger:hover{background:var(--danger);color:#f5ede8;}
+.mt{margin-top:10px;} .mt2{margin-top:22px;} .mb{margin-bottom:8px;} .mb2{margin-bottom:22px;}
+.btn-row{display:flex;gap:10px;}.btn-row .btn{flex:1;}
+.divider{display:flex;align-items:center;gap:14px;margin:18px 0;color:var(--muted);font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
 
-.alert{padding:11px 14px;border-radius:10px;font-size:.85rem;margin-bottom:14px;display:none;}
-.alert.err{background:rgba(244,63,94,.12);color:var(--danger);border:1px solid rgba(244,63,94,.25);}
-.alert.ok{background:rgba(74,222,128,.12);color:var(--accent);border:1px solid rgba(74,222,128,.25);}
+.alert{padding:12px 16px;border-left:2px solid;font-size:.85rem;margin-bottom:16px;display:none;font-style:italic;}
+.alert.err{background:rgba(122,40,40,.07);color:var(--danger);border-color:var(--danger);}
+.alert.ok{background:rgba(45,74,62,.07);color:var(--green);border-color:var(--green);}
 .alert.show{display:block;}
 
-.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
-.user-pill{font-size:.8rem;color:var(--muted);background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:5px 12px;}
-.icon-btn{background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:.8rem;padding:5px 10px;cursor:pointer;transition:all .2s;font-family:var(--font-body);}
-.icon-btn:hover{border-color:var(--accent);color:var(--accent);}
+.top-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+.user-pill{font-size:.72rem;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;font-family:var(--font-body);}
+.icon-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:.72rem;padding:5px 12px;cursor:pointer;transition:all .2s;font-family:var(--font-body);letter-spacing:.1em;text-transform:uppercase;position:relative;z-index:2;}
+.icon-btn:hover{border-color:var(--gold);color:var(--gold);}
 .icon-btn.danger:hover{border-color:var(--danger);color:var(--danger);}
 
-.hero-sub{font-size:.95rem;margin-bottom:28px;}
-.hero-features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:20px 0 28px;}
-.feat{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--text2);font-weight:500;}
+.hero-sub{font-size:1rem;margin-bottom:28px;color:var(--text2);font-style:italic;}
+.hero-features{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:22px 0 30px;}
+.feat{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border-light);padding:9px 0;font-size:.85rem;color:var(--text2);}
+.feat-dot{width:5px;height:5px;background:var(--gold);flex-shrink:0;}
 
-.start-hero{text-align:center;padding:12px 0 18px;}
-.start-icon{font-size:2.8rem;margin-bottom:10px;}
-.start-title{font-family:var(--font-head);font-size:1.3rem;font-weight:700;margin-bottom:8px;}
-.start-sub{font-size:.88rem;color:var(--text2);line-height:1.5;margin-bottom:0;}
-.start-sub strong{color:var(--accent);}
-.start-cats{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:18px 0 22px;}
-.cat-chip{background:var(--surface2);border:1px solid var(--border);border-radius:999px;padding:5px 12px;font-size:.75rem;color:var(--text2);font-weight:500;}
-.streak-bar{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:12px;}
-.streak-num{font-family:var(--font-head);font-size:1.8rem;font-weight:800;color:var(--accent);}
+.start-hero{text-align:center;padding:8px 0 20px;}
+.start-title{font-family:var(--font-head);font-size:1.3rem;font-weight:400;font-style:italic;margin-bottom:8px;}
+.start-sub{font-size:.88rem;color:var(--text2);line-height:1.6;}
+.start-sub strong{color:var(--green);font-style:normal;}
+.start-cats{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin:18px 0 24px;}
+.cat-chip{border:1px solid var(--border);padding:4px 13px;font-size:.72rem;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;}
+.streak-bar{border:1px solid var(--gold);border-left:3px solid var(--gold);padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:14px;background:rgba(154,125,74,.05);}
+.streak-num{font-family:var(--font-head);font-size:2rem;font-weight:400;color:var(--gold);}
 .streak-label{font-size:.82rem;color:var(--text2);}
-.streak-label strong{display:block;color:var(--text);font-size:.9rem;}
+.streak-label strong{display:block;color:var(--text);font-size:.88rem;font-style:italic;}
 
-.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.quiz-step{font-size:.78rem;color:var(--muted);font-weight:500;}
-.progress-bar{width:100%;height:5px;background:var(--surface2);border-radius:99px;overflow:hidden;margin-bottom:24px;}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),#22d3ee);border-radius:99px;transition:width .4s cubic-bezier(.4,0,.2,1);}
-.quiz-cat{font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;margin-bottom:8px;}
-.quiz-question{font-family:var(--font-head);font-size:1.18rem;font-weight:700;line-height:1.35;margin-bottom:10px;}
-.quiz-hint{font-size:.8rem;color:var(--muted);background:var(--surface2);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:9px 12px;margin-bottom:18px;line-height:1.5;}
-.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.quiz-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.quiz-step{font-size:.72rem;color:var(--muted);letter-spacing:.15em;text-transform:uppercase;}
+.progress-bar{width:100%;height:2px;background:var(--border-light);margin-bottom:28px;}
+.progress-fill{height:100%;background:var(--green);transition:width .4s cubic-bezier(.4,0,.2,1);}
+.quiz-cat{font-size:.68rem;text-transform:uppercase;letter-spacing:.2em;color:var(--gold);font-weight:500;margin-bottom:8px;}
+.quiz-question{font-family:var(--font-head);font-size:1.22rem;font-weight:400;font-style:italic;line-height:1.4;margin-bottom:10px;}
+.quiz-hint{font-size:.82rem;color:var(--muted);border-left:2px solid var(--gold-light);padding:8px 14px;margin-bottom:20px;line-height:1.5;font-style:italic;background:rgba(154,125,74,.04);}
+.quiz-options{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 .quiz-options.single{grid-template-columns:1fr;}
 .quiz-options.five{grid-template-columns:1fr 1fr;}
 @media(min-width:420px){.quiz-options.five{grid-template-columns:repeat(3,1fr);}}
-.opt-btn{padding:15px 11px;background:var(--surface2);border:2px solid var(--border);border-radius:12px;color:var(--text);font-family:var(--font-body);font-size:.88rem;font-weight:500;cursor:pointer;transition:all .18s;text-align:center;line-height:1.35;min-height:54px;display:flex;align-items:center;justify-content:center;width:100%;}
-.opt-btn:hover,.opt-btn:focus{border-color:var(--accent);background:rgba(74,222,128,.1);color:var(--accent);transform:translateY(-2px);outline:none;}
-.opt-btn:active{transform:scale(.96);}
-.opt-btn.selected{border-color:var(--accent);background:rgba(74,222,128,.15);color:var(--accent);}
-.quiz-note-label{font-size:.8rem;color:var(--muted);margin:20px 0 8px;font-weight:500;}
-.back-btn{margin-top:14px;width:100%;padding:11px;background:transparent;border:1.5px solid var(--border);border-radius:10px;color:var(--muted);font-family:var(--font-body);font-size:.85rem;font-weight:500;cursor:pointer;transition:all .2s;}
-.back-btn:hover{border-color:var(--accent);color:var(--accent);}
+.opt-btn{
+  padding:14px 12px;
+  background:var(--bg);
+  border:1px solid var(--border);
+  color:var(--text2);
+  font-family:var(--font-body);
+  font-size:.85rem;
+  cursor:pointer;
+  transition:all .18s, transform .08s;
+  text-align:center;
+  line-height:1.35;
+  min-height:52px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  position:relative;
+  z-index:2;
+  overflow:hidden;
+}
+.opt-btn:hover,.opt-btn:focus{border-color:var(--green);color:var(--green);background:var(--green-light);outline:none;}
+.opt-btn:active{transform:scale(.94);}
+.opt-btn.selected{border-color:var(--green);background:var(--green-light);color:var(--green);}
+.opt-btn.clicked{animation:clickPulse .25s ease-out;}
+@keyframes clickPulse{0%{transform:scale(1);}40%{transform:scale(.92);}100%{transform:scale(1);}}
+.quiz-note-label{font-size:.72rem;color:var(--gold);margin:22px 0 10px;letter-spacing:.15em;text-transform:uppercase;}
+.back-btn{margin-top:14px;width:100%;padding:11px;background:transparent;border:1px solid var(--border-light);color:var(--muted);font-family:var(--font-body);font-size:.8rem;cursor:pointer;transition:all .2s;letter-spacing:.1em;text-transform:uppercase;position:relative;z-index:2;}
+.back-btn:hover{border-color:var(--gold);color:var(--gold);}
 
 .finish-screen{text-align:center;padding:20px 0;}
-.finish-icon{font-size:3.5rem;animation:pop .5s ease;}
-@keyframes pop{0%{transform:scale(.5);opacity:0;}70%{transform:scale(1.15);}100%{transform:scale(1);opacity:1;}}
-.finish-title{font-family:var(--font-head);font-size:1.5rem;font-weight:800;margin:14px 0 8px;}
-.finish-sub{font-size:.9rem;color:var(--text2);margin-bottom:24px;}
+.finish-icon{font-size:2.4rem;letter-spacing:.3em;color:var(--gold);font-family:var(--font-head);font-style:italic;margin-bottom:6px;}
+.finish-title{font-family:var(--font-head);font-size:1.6rem;font-weight:400;font-style:italic;margin:12px 0 8px;}
+.finish-sub{font-size:.88rem;color:var(--text2);margin-bottom:28px;}
 .confetti{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
 
-.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:22px;}
 @media(min-width:500px){.score-grid{grid-template-columns:repeat(3,1fr);}}
-.score-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;position:relative;overflow:hidden;}
-.score-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
-.sc-energy::before{background:var(--accent);}
+.score-card{background:var(--bg);border:1px solid var(--border);padding:16px;position:relative;}
+.score-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.sc-energy::before{background:var(--green);}
 .sc-burnout::before{background:var(--danger);}
-.sc-focus::before{background:var(--blue);}
+.sc-focus::before{background:var(--gold);}
 .sc-stress::before{background:var(--warn);}
-.sc-wellbeing::before{background:var(--purple);}
-.sc-prod::before{background:var(--teal);}
-.sc-energy .s-val{color:var(--accent);}
+.sc-wellbeing::before{background:var(--green-mid);}
+.sc-prod::before{background:var(--gold-light);}
+.sc-energy .s-val{color:var(--green);}
 .sc-burnout .s-val{color:var(--danger);}
-.sc-focus .s-val{color:var(--blue);}
+.sc-focus .s-val{color:var(--gold);}
 .sc-stress .s-val{color:var(--warn);}
-.sc-wellbeing .s-val{color:var(--purple);}
-.sc-prod .s-val{color:var(--teal);}
-.s-label{font-size:.68rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;margin-bottom:6px;}
-.s-val{font-family:var(--font-head);font-size:2rem;font-weight:800;line-height:1;}
-.s-sub{font-size:.68rem;color:var(--muted);margin-top:4px;}
+.sc-wellbeing .s-val{color:var(--green-mid);}
+.sc-prod .s-val{color:var(--gold-light);}
+.s-label{font-size:.62rem;text-transform:uppercase;letter-spacing:.15em;color:var(--muted);margin-bottom:6px;}
+.s-val{font-family:var(--font-head);font-size:2rem;font-weight:400;line-height:1;}
+.s-sub{font-size:.65rem;color:var(--muted);margin-top:4px;font-style:italic;}
 
-.status-badge{display:flex;align-items:center;gap:10px;padding:14px 16px;border-radius:12px;font-size:.87rem;font-weight:500;line-height:1.45;margin-bottom:22px;}
-.status-badge .icon{font-size:1.4rem;flex-shrink:0;}
-.sb-ok{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);color:#a7f3c0;}
-.sb-warn{background:rgba(249,115,22,.1);border:1px solid rgba(249,115,22,.25);color:#fed7aa;}
-.sb-bad{background:rgba(244,63,94,.1);border:1px solid rgba(244,63,94,.25);color:#fca5b4;}
+.status-badge{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-left:3px solid;font-size:.85rem;font-weight:400;line-height:1.5;margin-bottom:24px;font-style:italic;}
+.sb-ok{background:rgba(45,74,62,.06);border-color:var(--green);color:var(--text2);}
+.sb-warn{background:rgba(122,74,30,.06);border-color:var(--warn);color:var(--text2);}
+.sb-bad{background:rgba(122,40,40,.06);border-color:var(--danger);color:var(--text2);}
 
-.chart-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
-.chart-tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
-.ctab{padding:5px 12px;border-radius:99px;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;font-family:var(--font-body);}
-.ctab.active{background:var(--accent);color:#0a1a0f;border-color:var(--accent);}
+.chart-wrap{background:var(--bg);border:1px solid var(--border);padding:18px;margin-bottom:14px;}
+.chart-tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap;}
+.ctab{padding:4px 14px;font-size:.7rem;font-weight:500;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;font-family:var(--font-body);letter-spacing:.1em;text-transform:uppercase;position:relative;z-index:2;}
+.ctab.active{background:var(--green);color:#f0ead8;border-color:var(--green);}
 
 .topic-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
-.topic-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;}
+.topic-card{background:var(--bg);border:1px solid var(--border);padding:14px;}
 .t-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-.t-name{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600;}
-.t-val{font-family:var(--font-head);font-size:1.05rem;font-weight:800;}
-.t-bar-bg{height:4px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:7px;}
-.t-bar-fill{height:100%;border-radius:99px;transition:width .7s ease;}
-.t-reason{font-size:.75rem;color:var(--text2);line-height:1.4;}
-.t-low{color:var(--accent);} .t-mid{color:#facc15;} .t-high{color:var(--danger);}
-.fill-low{background:var(--accent);} .fill-mid{background:#facc15;} .fill-high{background:var(--danger);}
+.t-name{font-size:.66rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);}
+.t-val{font-family:var(--font-head);font-size:1.1rem;font-weight:400;}
+.t-bar-bg{height:2px;background:var(--border-light);margin-bottom:8px;}
+.t-bar-fill{height:100%;transition:width .7s ease;}
+.t-reason{font-size:.75rem;color:var(--text2);line-height:1.5;font-style:italic;}
+.t-low{color:var(--green);}.t-mid{color:var(--warn);}.t-high{color:var(--danger);}
+.fill-low{background:var(--green);}.fill-mid{background:var(--warn);}.fill-high{background:var(--danger);}
 
-.ai-chat-box{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
-.ai-messages{max-height:260px;overflow-y:auto;margin-bottom:12px;display:flex;flex-direction:column;gap:10px;}
-.ai-msg{padding:10px 14px;border-radius:12px;font-size:.85rem;line-height:1.5;max-width:90%;}
-.ai-msg.ai{background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.2);color:var(--text);align-self:flex-start;}
-.ai-msg.user{background:var(--surface);border:1px solid var(--border);color:var(--text2);align-self:flex-end;}
-.ai-msg.loading{color:var(--muted);font-style:italic;}
+.ai-chat-box{background:var(--bg);border:1px solid var(--border);padding:18px;margin-bottom:14px;}
+.ai-messages{max-height:260px;overflow-y:auto;margin-bottom:14px;display:flex;flex-direction:column;gap:10px;}
+.ai-msg{padding:11px 15px;border:1px solid var(--border);font-size:.85rem;line-height:1.6;max-width:90%;font-style:italic;}
+.ai-msg.ai{background:var(--green-light);border-color:rgba(45,74,62,.2);color:var(--text);align-self:flex-start;}
+.ai-msg.user{background:var(--surface2);border-color:var(--border);color:var(--text2);align-self:flex-end;font-style:normal;}
+.ai-msg.loading{color:var(--muted);}
 .ai-input-row{display:flex;gap:8px;}
-.ai-input-row input{flex:1;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--font-body);font-size:.88rem;outline:none;}
-.ai-input-row input:focus{border-color:var(--accent);}
-.ai-send{padding:10px 16px;background:var(--accent);border:none;border-radius:10px;color:#0a1a0f;font-weight:700;cursor:pointer;font-size:.88rem;white-space:nowrap;}
+.ai-input-row input{flex:1;padding:10px 13px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-body);font-size:.9rem;outline:none;}
+.ai-input-row input:focus{border-color:var(--gold);}
+.ai-send{padding:10px 18px;background:var(--green);border:1px solid var(--green);color:#f0ead8;font-weight:500;cursor:pointer;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);position:relative;z-index:2;}
 
-.recs-list{display:flex;flex-direction:column;gap:10px;margin-bottom:4px;}
-.rec-item{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;display:flex;gap:12px;align-items:flex-start;}
-.rec-icon{font-size:1.3rem;flex-shrink:0;}
-.rec-title{font-family:var(--font-head);font-size:.88rem;font-weight:700;margin-bottom:3px;}
-.rec-desc{font-size:.78rem;color:var(--muted);line-height:1.4;}
-.rec-tag{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:99px;font-weight:600;margin-top:5px;}
-.tag-urgent{background:rgba(244,63,94,.15);color:var(--danger);}
-.tag-tip{background:rgba(74,222,128,.15);color:var(--accent);}
-.tag-great{background:rgba(167,139,250,.15);color:var(--purple);}
+.recs-list{display:flex;flex-direction:column;gap:0;margin-bottom:4px;}
+.rec-item{border-bottom:1px solid var(--border-light);padding:14px 0;display:flex;gap:14px;align-items:flex-start;}
+.rec-item:last-child{border-bottom:none;}
+.rec-icon{font-size:1.1rem;flex-shrink:0;width:22px;text-align:center;}
+.rec-title{font-family:var(--font-head);font-size:.92rem;font-weight:500;margin-bottom:3px;}
+.rec-desc{font-size:.8rem;color:var(--muted);line-height:1.5;font-style:italic;}
+.rec-tag{display:inline-block;font-size:.62rem;padding:2px 9px;letter-spacing:.1em;text-transform:uppercase;margin-top:5px;border:1px solid;}
+.tag-urgent{border-color:rgba(122,40,40,.3);color:var(--danger);}
+.tag-tip{border-color:rgba(45,74,62,.3);color:var(--green);}
+.tag-great{border-color:rgba(154,125,74,.4);color:var(--gold);}
 
-.trend-alert{border-radius:12px;padding:12px 16px;margin-bottom:10px;font-size:.82rem;border:1px solid;}
-.trend-alert.bad{background:rgba(244,63,94,.1);border-color:rgba(244,63,94,.3);color:#fca5b4;}
-.trend-alert.warn{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.3);color:#fed7aa;}
-.trend-alert.ok{background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.3);color:#a7f3c0;}
+.trend-alert{border-left:2px solid;padding:10px 16px;margin-bottom:10px;font-size:.82rem;font-style:italic;}
+.trend-alert.bad{border-color:var(--danger);color:var(--danger);background:rgba(122,40,40,.05);}
+.trend-alert.warn{border-color:var(--warn);color:var(--warn);background:rgba(122,74,30,.05);}
+.trend-alert.ok{border-color:var(--green);color:var(--green-mid);background:rgba(45,74,62,.05);}
 
 .week-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
-.week-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
-.week-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;font-weight:600;}
-.week-val{font-family:var(--font-head);font-size:1.6rem;font-weight:800;color:var(--accent);}
-.week-delta{font-size:.75rem;margin-top:4px;}
-.delta-up{color:var(--accent);} .delta-down{color:var(--danger);} .delta-same{color:var(--muted);}
+.week-card{background:var(--bg);border:1px solid var(--border);padding:14px;text-align:center;}
+.week-label{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:6px;}
+.week-val{font-family:var(--font-head);font-size:1.7rem;font-weight:400;color:var(--green);}
+.week-delta{font-size:.75rem;margin-top:4px;font-style:italic;}
+.delta-up{color:var(--green);}.delta-down{color:var(--danger);}.delta-same{color:var(--muted);}
 
-.note-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
-.note-date{font-size:.72rem;color:var(--muted);margin-bottom:4px;}
-.note-text{font-size:.85rem;color:var(--text2);line-height:1.5;}
+.note-card{background:var(--bg);border:1px solid var(--border);border-left:2px solid var(--gold-light);padding:14px 18px;margin-bottom:10px;}
+.note-date{font-size:.66rem;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.12em;}
+.note-text{font-size:.88rem;color:var(--text2);line-height:1.6;font-style:italic;}
 
 .history-list{list-style:none;}
-.history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);font-size:.85rem;}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border-light);font-size:.85rem;}
 .history-item:last-child{border-bottom:none;}
-.history-day{color:var(--muted);font-weight:500;font-size:.8rem;}
-.history-vals{display:flex;gap:7px;flex-wrap:wrap;}
-.tag{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:99px;}
-.tag-e{background:rgba(74,222,128,.15);color:var(--accent);}
-.tag-b{background:rgba(244,63,94,.15);color:var(--danger);}
-.tag-w{background:rgba(167,139,250,.15);color:var(--purple);}
-.tag-p{background:rgba(52,211,153,.15);color:var(--teal);}
+.history-day{color:var(--muted);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;}
+.history-vals{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:.65rem;letter-spacing:.08em;padding:3px 8px;text-transform:uppercase;border:1px solid;}
+.tag-e{border-color:rgba(45,74,62,.3);color:var(--green);}
+.tag-b{border-color:rgba(122,40,40,.3);color:var(--danger);}
+.tag-w{border-color:rgba(154,125,74,.4);color:var(--gold);}
+.tag-p{border-color:rgba(45,74,62,.2);color:var(--green-mid);}
 
-.legend-grid{display:grid;gap:8px;}
-.legend-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start;}
-.legend-icon{font-size:1.1rem;flex-shrink:0;padding-top:2px;}
-.legend-title{font-family:var(--font-head);font-size:.82rem;font-weight:700;margin-bottom:2px;}
-.legend-desc{font-size:.75rem;color:var(--muted);line-height:1.4;}
+.legend-grid{display:grid;gap:0;}
+.legend-item{border-bottom:1px solid var(--border-light);padding:12px 0;display:flex;gap:12px;align-items:flex-start;}
+.legend-item:last-child{border-bottom:none;}
+.legend-icon{font-size:.95rem;flex-shrink:0;width:20px;padding-top:2px;}
+.legend-title{font-size:.82rem;font-weight:500;margin-bottom:2px;font-family:var(--font-body);}
+.legend-desc{font-size:.76rem;color:var(--muted);line-height:1.5;font-style:italic;}
 
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
+.modal-overlay{position:fixed;inset:0;background:rgba(20,16,10,.65);backdrop-filter:blur(2px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s;}
 .modal-overlay.open{opacity:1;pointer-events:all;}
-.modal-box{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px 24px;max-width:320px;width:90%;box-shadow:0 30px 80px rgba(0,0,0,.5);transform:translateY(14px);transition:transform .25s;}
+.modal-box{background:var(--surface);border:1px solid var(--border);padding:32px 28px;max-width:320px;width:90%;transform:translateY(10px);transition:transform .25s;position:relative;}
+.modal-box::before{content:'';position:absolute;top:5px;left:5px;right:-5px;bottom:-5px;border:1px solid var(--border-light);z-index:-1;}
 .modal-overlay.open .modal-box{transform:translateY(0);}
-.modal-box h4{font-family:var(--font-head);font-size:1.05rem;font-weight:700;margin-bottom:8px;}
-.modal-box p{font-size:.85rem;color:var(--text2);margin-bottom:18px;}
+.modal-box h4{font-family:var(--font-head);font-size:1.1rem;font-weight:400;font-style:italic;margin-bottom:8px;}
+.modal-box p{font-size:.85rem;color:var(--text2);margin-bottom:20px;font-style:italic;}
 .modal-btns{display:flex;gap:10px;}
 .modal-btns .btn{flex:1;padding:11px;}
 
-.dash-tabs{display:flex;gap:6px;margin-bottom:20px;overflow-x:auto;padding-bottom:2px;}
-.dtab{padding:8px 16px;border-radius:99px;font-size:.78rem;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap;font-family:var(--font-body);}
-.dtab.active{background:var(--accent);color:#0a1a0f;border-color:var(--accent);}
-.dash-panel{display:none;} .dash-panel.active{display:block;}
+.dash-tabs{display:flex;gap:0;margin-bottom:24px;overflow-x:auto;border-bottom:1px solid var(--border);}
+.dtab{padding:9px 16px;font-size:.7rem;font-weight:500;cursor:pointer;border:none;border-bottom:2px solid transparent;background:transparent;color:var(--muted);transition:all .2s;white-space:nowrap;font-family:var(--font-body);letter-spacing:.12em;text-transform:uppercase;position:relative;z-index:2;margin-bottom:-1px;}
+.dtab.active{color:var(--green);border-bottom-color:var(--green);}
+.dtab:hover{color:var(--text2);}
+.dash-panel{display:none;}.dash-panel.active{display:block;}
 
-.theme-toggle{background:none;border:1px solid var(--border);border-radius:8px;padding:5px 9px;cursor:pointer;font-size:.9rem;color:var(--muted);transition:all .2s;}
-.theme-toggle:hover{border-color:var(--accent);}
-
+.theme-toggle{background:none;border:1px solid var(--border);padding:5px 10px;cursor:pointer;font-size:.75rem;color:var(--muted);transition:all .2s;letter-spacing:.1em;text-transform:uppercase;font-family:var(--font-body);position:relative;z-index:2;}
+.theme-toggle:hover{border-color:var(--gold);color:var(--gold);}
 canvas{max-width:100%;}
 </style>
 </head>
@@ -234,19 +311,24 @@ canvas{max-width:100%;}
 <!-- HOME -->
 <div class="screen active" id="homeScreen">
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <div class="logo-badge" style="margin:0">NeuroPace IA</div>
-      <button class="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+      <div class="logo-mark"><div class="crest">N</div> NeuroPace</div>
+      <div style="display:flex;gap:6px;">
+        <button class="theme-toggle" id="soundToggleHome" onclick="toggleSound()">&#9834;</button>
+        <button class="theme-toggle" id="themeToggleHome" onclick="toggleTheme()">&#9790;</button>
+      </div>
     </div>
-    <h1 style="margin-bottom:10px;">Seu check-in<br>mental diário.</h1>
-    <p class="hero-sub">Entenda como você está se sentindo — em menos de 5 minutos.</p>
+    <div class="ornament">— &#9670; —</div>
+    <h1>O seu check-in<br>mental diário.</h1>
+    <p class="hero-sub">Compreenda como está se sentindo — em menos de cinco minutos.</p>
+    <hr class="rule rule-gold">
     <div class="hero-features">
-      <div class="feat"><span>🧠</span><span>50 perguntas simples</span></div>
-      <div class="feat"><span>📊</span><span>Relatório completo</span></div>
-      <div class="feat"><span>🤖</span><span>IA que te entende</span></div>
-      <div class="feat"><span>📈</span><span>Acompanhe sua evolução</span></div>
-      <div class="feat"><span>☁️</span><span>Dados salvos na nuvem</span></div>
-      <div class="feat"><span>🔥</span><span>Sequência de dias</span></div>
+      <div class="feat"><div class="feat-dot"></div><span>50 questões cuidadosas</span></div>
+      <div class="feat"><div class="feat-dot"></div><span>Relatório detalhado</span></div>
+      <div class="feat"><div class="feat-dot"></div><span>Assistente com IA</span></div>
+      <div class="feat"><div class="feat-dot"></div><span>Evolução ao longo do tempo</span></div>
+      <div class="feat"><div class="feat-dot"></div><span>Dados salvos na nuvem</span></div>
+      <div class="feat"><div class="feat-dot"></div><span>Sequência de dias</span></div>
     </div>
     <button class="btn btn-primary" onclick="goTo('authScreen')">Entrar / Criar conta</button>
   </div>
@@ -255,6 +337,7 @@ canvas{max-width:100%;}
 <!-- AUTH -->
 <div class="screen" id="authScreen">
   <div class="card">
+    <div class="logo-mark" style="margin-bottom:24px;"><div class="crest">N</div> NeuroPace</div>
     <h2>Acesse sua conta</h2>
     <div id="authAlert" class="alert"></div>
     <div id="loginForm">
@@ -271,7 +354,7 @@ canvas{max-width:100%;}
       <div class="divider">ou</div>
       <button class="btn btn-secondary" onclick="toggleForm('login')">Já tenho conta</button>
     </div>
-    <button class="btn btn-ghost mt2" onclick="goTo('homeScreen')">← Voltar</button>
+    <button class="btn btn-ghost mt2" onclick="goTo('homeScreen')">&#8592; Voltar</button>
   </div>
 </div>
 
@@ -279,30 +362,33 @@ canvas{max-width:100%;}
 <div class="screen" id="startScreen">
   <div class="card">
     <div class="top-bar">
-      <span class="user-pill" id="startUserPill">👤</span>
+      <span class="user-pill" id="startUserPill">&#9670;</span>
       <div style="display:flex;gap:6px;">
-        <button class="theme-toggle sound-toggle" onclick="toggleSound()">🔊</button>
-        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        <button class="theme-toggle" id="soundToggleStart" onclick="toggleSound()">&#9834;</button>
+        <button class="theme-toggle" id="themeToggleStart" onclick="toggleTheme()">&#9790;</button>
         <button class="icon-btn danger" onclick="confirmLogout()">Sair</button>
       </div>
     </div>
     <div id="streakBar" class="streak-bar" style="display:none">
       <div class="streak-num" id="streakNum">0</div>
-      <div class="streak-label"><strong id="streakText">dias seguidos!</strong><span>Continue assim — a constância é o que transforma hábitos.</span></div>
+      <div class="streak-label">
+        <strong id="streakText">dias seguidos</strong>
+        <span>A constância é o que transforma hábitos.</span>
+      </div>
     </div>
     <div id="trendAlertsStart"></div>
+    <div class="ornament">— &#9670; —</div>
     <div class="start-hero">
-      <div class="start-icon">🧠</div>
       <div class="start-title">Pronto para o check-in?</div>
-      <p class="start-sub">São <strong>50 perguntas simples</strong> sobre o seu dia.<br>Leva de 4 a 6 minutos.</p>
+      <p class="start-sub">São <strong>50 perguntas</strong> sobre o seu dia.<br>Leva quatro a cinco minutos.</p>
     </div>
     <div class="start-cats">
       <span class="cat-chip">Sono</span><span class="cat-chip">Energia</span><span class="cat-chip">Foco</span>
       <span class="cat-chip">Emoções</span><span class="cat-chip">Telas</span><span class="cat-chip">Pessoas</span>
-      <span class="cat-chip">Autocuidado</span><span class="cat-chip">Corpo</span><span class="cat-chip">Pensamentos</span>
+      <span class="cat-chip">Autocuidado</span><span class="cat-chip">Trabalho</span><span class="cat-chip">Corpo</span>
     </div>
-    <button class="btn btn-primary" onclick="startQuiz('full')">Começar check-in completo (50 perguntas)</button>
-    <button class="btn btn-secondary mt" onclick="startQuiz('quick')">Check-in rápido (10 perguntas)</button>
+    <button class="btn btn-primary" onclick="startQuiz('full')">Começar check-in completo (50)</button>
+    <button class="btn btn-secondary mt" onclick="startQuiz('quick')">Check-in rápido (10 questões)</button>
     <button class="btn btn-secondary mt" id="viewDashBtn" onclick="viewLastDash()" style="display:none">Ver último relatório</button>
   </div>
 </div>
@@ -311,8 +397,8 @@ canvas{max-width:100%;}
 <div class="screen" id="quizScreen">
   <div class="card">
     <div class="quiz-header">
-      <span class="logo-badge" style="margin:0;font-size:.72rem;">NeuroPace</span>
-      <div style="display:flex;align-items:center;gap:8px;">
+      <div class="logo-mark" style="font-size:.7rem;"><div class="crest" style="width:22px;height:22px;font-size:.65rem;">N</div></div>
+      <div style="display:flex;align-items:center;gap:10px;">
         <span class="quiz-step" id="stepLabel">1/50</span>
         <button class="icon-btn danger" onclick="confirmLogout()">Sair</button>
       </div>
@@ -323,10 +409,10 @@ canvas{max-width:100%;}
     <div class="quiz-hint" id="quizHint" style="display:none"></div>
     <div class="quiz-options" id="quizOpts"></div>
     <div id="noteSection" style="display:none">
-      <div class="quiz-note-label">Quer adicionar alguma observação? (opcional)</div>
-      <textarea id="dayNote" rows="3" placeholder="Como foi seu dia em geral? Algo importante que aconteceu..."></textarea>
+      <div class="quiz-note-label">Nota do dia (opcional)</div>
+      <textarea id="dayNote" rows="3" placeholder="Como foi seu dia? Algo que gostaria de registrar..."></textarea>
     </div>
-    <button class="back-btn" id="backBtn" onclick="goBack()" style="display:none">← Pergunta anterior</button>
+    <button class="back-btn" id="backBtn" onclick="goBack()" style="display:none">&#8592; Questão anterior</button>
   </div>
 </div>
 
@@ -334,8 +420,9 @@ canvas{max-width:100%;}
 <div class="screen" id="finishScreen">
   <div class="card">
     <div class="finish-screen">
-      <div class="finish-icon" id="finishIcon">✅</div>
-      <div class="finish-title" id="finishTitle">Check-in concluído!</div>
+      <div class="finish-icon" id="finishIcon">✦</div>
+      <div class="ornament">— &#9670; —</div>
+      <div class="finish-title" id="finishTitle">Check-in concluído.</div>
       <p class="finish-sub" id="finishSub">Seu relatório está pronto.</p>
       <button class="btn btn-primary" onclick="showDashFromFinish()">Ver meu relatório</button>
     </div>
@@ -346,10 +433,10 @@ canvas{max-width:100%;}
 <div class="screen" id="dashScreen">
   <div class="card">
     <div class="top-bar">
-      <span class="user-pill" id="userPill">👤</span>
+      <span class="user-pill" id="userPill">&#9670;</span>
       <div style="display:flex;gap:6px;">
-        <button class="theme-toggle sound-toggle" onclick="toggleSound()">🔊</button>
-        <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+        <button class="theme-toggle" id="soundToggleDash" onclick="toggleSound()">&#9834;</button>
+        <button class="theme-toggle" id="themeToggleDash" onclick="toggleTheme()">&#9790;</button>
         <button class="icon-btn danger" onclick="confirmLogout()">Sair</button>
       </div>
     </div>
@@ -358,19 +445,20 @@ canvas{max-width:100%;}
     <div id="statusBadge" class="mb2"></div>
 
     <div class="dash-tabs">
-      <button class="dtab active" onclick="switchTab('overview',event)">Resumo</button>
-      <button class="dtab" onclick="switchTab('ai',event)">IA</button>
-      <button class="dtab" onclick="switchTab('details',event)">Detalhado</button>
-      <button class="dtab" onclick="switchTab('evolution',event)">Evolução</button>
-      <button class="dtab" onclick="switchTab('history',event)">Histórico</button>
+      <button class="dtab active" data-tab="overview" onclick="switchTab(this,'overview')">Resumo</button>
+      <button class="dtab" data-tab="ai" onclick="switchTab(this,'ai')">IA</button>
+      <button class="dtab" data-tab="details" onclick="switchTab(this,'details')">Detalhado</button>
+      <button class="dtab" data-tab="evolution" onclick="switchTab(this,'evolution')">Evolução</button>
+      <button class="dtab" data-tab="history" onclick="switchTab(this,'history')">Histórico</button>
     </div>
 
     <div class="dash-panel active" id="tab-overview">
-      <h3>Recomendações para hoje</h3>
+      <h3>Recomendações</h3>
       <div class="recs-list" id="recsList"></div>
+      <hr class="rule" style="margin-top:20px;">
       <h3 style="margin-top:20px;">Comparativo semanal</h3>
       <div class="week-grid" id="weekGrid"></div>
-      <div id="dayNoteCard" style="display:none;margin-top:16px;">
+      <div id="dayNoteCard" style="display:none;margin-top:18px;">
         <h3>Nota do dia</h3>
         <div class="note-card"><div class="note-date" id="noteDateLabel"></div><div class="note-text" id="noteTextDisplay"></div></div>
       </div>
@@ -380,7 +468,7 @@ canvas{max-width:100%;}
       <div class="ai-chat-box">
         <div class="ai-messages" id="aiMessages"></div>
         <div class="ai-input-row">
-          <input type="text" id="aiInput" placeholder="Como você está se sentindo? Pergunte algo..." onkeydown="if(event.key==='Enter')sendAI()">
+          <input type="text" id="aiInput" placeholder="Pergunte algo sobre seu check-in..." onkeydown="if(event.key==='Enter')sendAI()">
           <button class="ai-send" onclick="sendAI()">Enviar</button>
         </div>
       </div>
@@ -389,30 +477,32 @@ canvas{max-width:100%;}
     <div class="dash-panel" id="tab-details">
       <h3>Análise por área</h3>
       <div class="topic-grid" id="topicCards"></div>
-      <h3 style="margin-top:20px;">O que cada coisa significa?</h3>
+      <hr class="rule" style="margin-top:20px;">
+      <h3 style="margin-top:20px;">O que cada indicador significa</h3>
       <div class="legend-grid" id="legendGrid"></div>
     </div>
 
     <div class="dash-panel" id="tab-evolution">
       <h3>Evolução ao longo do tempo</h3>
       <div class="chart-tabs">
-        <button class="ctab active" onclick="switchChart('all',event)">Todos</button>
-        <button class="ctab" onclick="switchChart('energia',event)">Energia</button>
-        <button class="ctab" onclick="switchChart('burnout',event)">Burnout</button>
-        <button class="ctab" onclick="switchChart('bemestar',event)">Bem-estar</button>
-        <button class="ctab" onclick="switchChart('produtividade',event)">Produtividade</button>
+        <button class="ctab active" data-mode="all" onclick="switchChart(this,'all')">Todos</button>
+        <button class="ctab" data-mode="energia" onclick="switchChart(this,'energia')">Energia</button>
+        <button class="ctab" data-mode="burnout" onclick="switchChart(this,'burnout')">Burnout</button>
+        <button class="ctab" data-mode="bemestar" onclick="switchChart(this,'bemestar')">Bem-estar</button>
+        <button class="ctab" data-mode="produtividade" onclick="switchChart(this,'produtividade')">Produtividade</button>
       </div>
       <div class="chart-wrap"><canvas id="lineChart" height="180"></canvas></div>
-      <h3 style="margin-top:16px;">Radar de hoje</h3>
+      <h3 style="margin-top:18px;">Radar de hoje</h3>
       <div class="chart-wrap"><canvas id="radarChart" height="220"></canvas></div>
     </div>
 
     <div class="dash-panel" id="tab-history">
       <h3>Histórico de check-ins</h3>
       <ul class="history-list" id="historyList"></ul>
-      <div id="notesList" style="margin-top:16px;"></div>
+      <div id="notesList" style="margin-top:18px;"></div>
     </div>
 
+    <hr class="rule" style="margin-top:24px;">
     <button class="btn btn-primary mt2" onclick="goToStart()">Novo check-in</button>
     <button class="btn btn-secondary mt" onclick="exportReport()">Exportar relatório</button>
   </div>
@@ -424,7 +514,7 @@ canvas{max-width:100%;}
 <div class="modal-overlay" id="logoutModal">
   <div class="modal-box">
     <h4>Sair da conta?</h4>
-    <p>Seu progresso do check-in atual será perdido. Tem certeza?</p>
+    <p>O progresso do check-in atual será perdido.</p>
     <div class="modal-btns">
       <button class="btn btn-secondary" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-danger" onclick="logout()">Sair</button>
@@ -433,125 +523,202 @@ canvas{max-width:100%;}
 </div>
 
 <script>
-/* ====== STATE ====== */
-let currentUser=null, step=0, answers={}, answerHistory=[], quizMode='full';
-let lastDashData=null, lineChartInst=null, radarChartInst=null, allData=[];
+let currentUser=null,step=0,answers={},answerHistory=[],quizMode='full';
+let lastDashData=null,lineChartInst=null,radarChartInst=null,allData=[];
 let aiHistory=[];
+let soundEnabled=localStorage.getItem('np_sound')!=='off';
 
-/* ====== 50 QUESTIONS ====== */
-const fullQuestions = [
-  // --- SONO (1–6) ---
+// ─── AUDIO ENGINE ───────────────────────────────────────────────────────────
+let audioCtx=null;
+function getCtx(){
+  if(!audioCtx||audioCtx.state==='closed'){
+    audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  }
+  if(audioCtx.state==='suspended')audioCtx.resume();
+  return audioCtx;
+}
+
+function playClick(){
+  if(!soundEnabled)return;
+  try{
+    const ctx=getCtx();
+    const t=ctx.currentTime;
+    // crisp click: sine burst + tiny noise tail
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type='sine';osc.frequency.setValueAtTime(600,t);osc.frequency.exponentialRampToValueAtTime(200,t+0.06);
+    gain.gain.setValueAtTime(0.18,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.07);
+    osc.start(t);osc.stop(t+0.08);
+    // second harmonic
+    const osc2=ctx.createOscillator();
+    const gain2=ctx.createGain();
+    osc2.connect(gain2);gain2.connect(ctx.destination);
+    osc2.type='sine';osc2.frequency.setValueAtTime(1200,t);
+    gain2.gain.setValueAtTime(0.06,t);gain2.gain.exponentialRampToValueAtTime(0.001,t+0.04);
+    osc2.start(t);osc2.stop(t+0.05);
+  }catch(e){}
+}
+
+function playBack(){
+  if(!soundEnabled)return;
+  try{
+    const ctx=getCtx();const t=ctx.currentTime;
+    const osc=ctx.createOscillator();const gain=ctx.createGain();
+    osc.connect(gain);gain.connect(ctx.destination);
+    osc.type='sine';osc.frequency.setValueAtTime(400,t);osc.frequency.exponentialRampToValueAtTime(250,t+0.09);
+    gain.gain.setValueAtTime(0.1,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+    osc.start(t);osc.stop(t+0.11);
+  }catch(e){}
+}
+
+function playFinish(){
+  if(!soundEnabled)return;
+  try{
+    const ctx=getCtx();
+    const melody=[330,440,550,660,880];
+    melody.forEach((f,i)=>{
+      const t=ctx.currentTime+i*0.1;
+      const osc=ctx.createOscillator();const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type='sine';osc.frequency.setValueAtTime(f,t);
+      gain.gain.setValueAtTime(0.12,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.22);
+      osc.start(t);osc.stop(t+0.23);
+    });
+  }catch(e){}
+}
+
+function playLogin(){
+  if(!soundEnabled)return;
+  try{
+    const ctx=getCtx();
+    [[440,0],[550,.08],[660,.16]].forEach(([f,d])=>{
+      const t=ctx.currentTime+d;
+      const osc=ctx.createOscillator();const gain=ctx.createGain();
+      osc.connect(gain);gain.connect(ctx.destination);
+      osc.type='sine';osc.frequency.setValueAtTime(f,t);
+      gain.gain.setValueAtTime(0.1,t);gain.gain.exponentialRampToValueAtTime(0.001,t+0.15);
+      osc.start(t);osc.stop(t+0.16);
+    });
+  }catch(e){}
+}
+
+// ─── 50 PERGUNTAS ───────────────────────────────────────────────────────────
+const fullQuestions=[
+  // SONO (6)
   {cat:'Noite de ontem',q:'Como você dormiu ontem à noite?',hint:'Pense se acordou descansado ou cansado.',key:'sono',opts:[['Péssimo, mal dormi',2],['Ruim, acordei cansado',4],['Mais ou menos',6],['Bem, razoavelmente',8],['Ótimo, acordei descansado',10]]},
-  {cat:'Noite de ontem',q:'Quantas horas você dormiu?',hint:'Lembre que horas foi dormir e que horas acordou.',key:'horas_sono',opts:[['Menos de 5 horas',2],['5 ou 6 horas',4],['6 ou 7 horas',7],['7 ou 8 horas',9],['Mais de 8 horas',10]]},
-  {cat:'Noite de ontem',q:'Você acordou no meio da noite alguma vez?',hint:'Ficou virando na cama ou acordou e não conseguiu dormir de novo?',key:'acorda_noite',opts:[['Acordei várias vezes',2],['Acordei uma ou duas vezes',5],['Quase não acordei',8],['Dormi do começo ao fim',10]]},
-  {cat:'Noite de ontem',q:'Você usou o celular antes de dormir?',hint:'Redes sociais, vídeos, mensagens na cama.',key:'celular_antes_dormir',opts:[['Sim, até apagar os olhos',2],['Por mais de 30 minutos',4],['Uns 10 ou 15 minutos',7],['Não usei o celular na cama',10]]},
-  {cat:'Noite de ontem',q:'Você se sentiu ansioso ou agitado antes de dormir?',hint:'Pensamentos que não paravam, coração acelerado, dificuldade de relaxar.',key:'ansiedade_noturna',opts:[['Sim, muito agitado',2],['Um pouco',5],['Quase nada',8],['Nada, estava calmo',10]]},
-  {cat:'Noite de ontem',q:'Você acordou se sentindo descansado de verdade?',hint:'Não só acordado — mas realmente recuperado e pronto.',key:'acordou_descansado',opts:[['Não, acordei exausto',2],['Acordei ainda cansado',4],['Mais ou menos',6],['Sim, bem descansado',8],['Ótimo, cheio de energia',10]]},
+  {cat:'Noite de ontem',q:'Quantas horas você dormiu?',hint:'Lembre que horas foi dormir e que horas acordou.',key:'horas_sono',opts:[['Menos de 5 horas',2],['Umas 5 ou 6 horas',4],['Umas 6 ou 7 horas',7],['7 ou 8 horas',9],['Mais de 8 horas',10]]},
+  {cat:'Noite de ontem',q:'Você teve dificuldade para pegar no sono ou acordou no meio da noite?',hint:'Ficou rolando na cama ou acordou várias vezes.',key:'qualidade_sono',opts:[['Sim, tive muita dificuldade',2],['Acordei algumas vezes',4],['Peguei no sono ok mas acordei cedo',6],['Dormi sem interrupções',10]]},
+  {cat:'Noite de ontem',q:'Você usou telas (celular/TV) antes de dormir?',hint:'Telas antes de dormir atrasam o sono profundo.',key:'tela_sono',opts:[['Sim, fiquei horas na tela',2],['Sim, uns 30 a 60 minutos',5],['Só um pouco, menos de 30 min',7],['Não usei telas antes de dormir',10]]},
+  {cat:'Noite de ontem',q:'Você sonhou ou acordou lembrando de sonhos intensos?',hint:'Sonhos agitados podem indicar sono de baixa qualidade.',key:'sonhos',opts:[['Sim, sonhos agitados ou pesadelos',3],['Sonhei mas não atrapalhou',6],['Não lembro de sonhos',8],['Acordei tranquilo e descansado',10]]},
+  {cat:'Noite de ontem',q:'A que horas você foi dormir ontem?',hint:'Horários consistentes regulam o relógio biológico.',key:'horario_sono',opts:[['Depois de meia-noite e meia',2],['Entre meia-noite e 00:30',4],['Entre 23h e meia-noite',7],['Antes das 23h',10]]},
 
-  // --- CORPO (7–13) ---
-  {cat:'Seu corpo hoje',q:'Como estava sua energia quando você acordou?',hint:'Primeiro momento do dia — queria levantar ou ficar na cama?',key:'energia_manha',opts:[['Sem energia nenhuma',2],['Bem cansado',4],['Mais ou menos',6],['Com boa energia',8],['Pronto para o dia',10]]},
-  {cat:'Seu corpo hoje',q:'Você fez alguma atividade física hoje?',hint:'Academia, caminhada, subir escadas — qualquer coisa que mexeu seu corpo.',key:'exercicio',opts:[['Fiquei parado o dia todo',2],['Me mexi um pouquinho',5],['Fiz algo leve como caminhar',8],['Me exercitei de verdade',10]]},
-  {cat:'Seu corpo hoje',q:'Como foi a sua alimentação hoje?',hint:'Pense se comeu bem, pulou refeições ou comeu coisas pesadas.',key:'alimentacao',opts:[['Comi mal ou quase nada',2],['Comi mas não foi bom',5],['Comi razoavelmente bem',8],['Me alimentei muito bem',10]]},
-  {cat:'Seu corpo hoje',q:'Você bebeu água suficiente hoje?',hint:'Um adulto precisa de cerca de 2 litros por dia.',key:'hidratacao',opts:[['Quase não bebi água',2],['Bebi pouco',5],['Quantidade razoável',7],['Me mantive bem hidratado',10]]},
-  {cat:'Seu corpo hoje',q:'Você sentiu dor física ou desconforto no corpo hoje?',hint:'Dor de cabeça, costas, pescoço, estômago — qualquer coisa que atrapalhou.',key:'dor_fisica',opts:[['Sim, muita dor',2],['Um pouco de desconforto',5],['Quase nada',8],['Nenhuma dor',10]]},
-  {cat:'Seu corpo hoje',q:'Como está sua respiração? Você notou ela hoje?',hint:'Ficou preso no peito, respiração curta ou acelerada em algum momento?',key:'respiracao',opts:[['Sim, senti aperto no peito',2],['Algumas vezes',5],['Raramente',8],['Respirei bem o dia todo',10]]},
-  {cat:'Seu corpo hoje',q:'Você se sentiu tenso ou com o corpo travado hoje?',hint:'Ombros duros, mandíbula apertada, pescoço rígido.',key:'tensao_corporal',opts:[['Sim, muito tenso',2],['Um pouco',5],['Quase nada',8],['Sem tensão nenhuma',10]]},
+  // CORPO (8)
+  {cat:'Seu corpo hoje',q:'Como você estava de energia quando acordou?',hint:'Primeiro momento do dia — queria levantar ou ficar na cama?',key:'energia_manha',opts:[['Sem energia nenhuma',2],['Bem cansado',4],['Mais ou menos',6],['Com boa energia',8],['Pronto para o dia',10]]},
+  {cat:'Seu corpo hoje',q:'Você se moveu ou fez alguma atividade física hoje?',hint:'Academia, caminhada, subir escadas — qualquer coisa que mexeu seu corpo.',key:'exercicio',opts:[['Fiquei parado o dia todo',2],['Me mexi um pouquinho',5],['Fiz algo leve como caminhar',8],['Me exercitei de verdade',10]]},
+  {cat:'Seu corpo hoje',q:'Como foi o que você comeu hoje?',hint:'Pense se comeu bem, pulou refeições ou comeu coisas pesadas.',key:'alimentacao',opts:[['Comi mal ou quase nada',2],['Comi mas não foi legal',5],['Comi razoavelmente bem',8],['Me alimentei muito bem',10]]},
+  {cat:'Seu corpo hoje',q:'Você bebeu água suficiente hoje?',hint:'Um adulto precisa de cerca de 2 litros por dia.',key:'hidratacao',opts:[['Quase não bebi água',2],['Bebi pouco',5],['Bebi uma quantidade razoável',7],['Me mantive bem hidratado',10]]},
+  {cat:'Seu corpo hoje',q:'Você sentiu alguma dor física ou desconforto hoje?',hint:'Dor de cabeça, costas, tensão muscular, dor de estômago.',key:'dor_fisica',opts:[['Sim, muita dor o dia todo',2],['Dor moderada em alguns momentos',4],['Desconforto leve',6],['Me senti fisicamente bem',10]]},
+  {cat:'Seu corpo hoje',q:'Como estava sua postura e tensão corporal ao longo do dia?',hint:'Ombros tensos, mandíbula apertada, costas curvadas.',key:'tensao',opts:[['Muito tenso, contraído',2],['Bastante tensão',4],['Tensão moderada',6],['Corpo relaxado e confortável',10]]},
+  {cat:'Seu corpo hoje',q:'Você teve algum sintoma físico ligado ao estresse hoje?',hint:'Coração acelerado, respiração curta, suor frio, aperto no peito.',key:'sintomas_stress',opts:[['Sim, sintomas intensos',2],['Alguns sintomas',5],['Sintomas muito leves',7],['Nenhum sintoma físico',10]]},
+  {cat:'Seu corpo hoje',q:'Como foi sua respiração ao longo do dia?',hint:'Respiração curta e superficial é sinal de tensão.',key:'respiracao',opts:[['Presa, curta o dia todo',2],['Bastante superficial',4],['Normal',7],['Profunda e tranquila',10]]},
 
-  // --- MENTE E FOCO (14–20) ---
-  {cat:'Sua cabeça hoje',q:'Você sentiu que tinha muita coisa na sua cabeça hoje?',hint:'Muitas tarefas, decisões, preocupações — seu cérebro ficou sobrecarregado?',key:'carga',opts:[['Não, foi um dia tranquilo',4],['Tive bastante coisa mas ok',7],['Foi muito puxado',10],['Minha cabeça não parou',12]]},
+  // MENTE (8)
+  {cat:'Sua cabeça hoje',q:'Você sentiu que havia muita coisa na sua cabeça hoje?',hint:'Muitas tarefas, decisões, preocupações.',key:'carga',opts:[['Não, foi um dia tranquilo',4],['Tive bastante coisa mas ok',7],['Foi muito puxado',10],['Minha cabeça não parou um segundo',12]]},
   {cat:'Sua cabeça hoje',q:'Você conseguiu se concentrar nas coisas que precisava fazer?',hint:'Ficou com a cabeça viajando? Precisou reler a mesma coisa várias vezes?',key:'foco',opts:[['Não consegui me concentrar em nada',2],['Me distraía muito facilmente',4],['Me concentrei razoavelmente',7],['Fui muito focado hoje',10]]},
-  {cat:'Sua cabeça hoje',q:'Você conseguiu fazer o que precisava hoje?',hint:'Pense nas suas tarefas do dia — trabalho, escola, afazeres.',key:'produtividade',opts:[['Não consegui fazer nada',2],['Fiz muito pouco',4],['Fiz a metade do que queria',6],['Fiz a maior parte',8],['Fiz tudo que precisava',10]]},
-  {cat:'Sua cabeça hoje',q:'Você esqueceu coisas com mais frequência do que o normal hoje?',hint:'Entrou num cômodo sem saber o porquê, esqueceu palavras, perdeu objetos.',key:'memoria',opts:[['Sim, muito mais que o normal',2],['Um pouco mais',5],['Quase não',8],['Minha memória estava ótima',10]]},
-  {cat:'Sua cabeça hoje',q:'Você conseguiu tomar decisões com facilidade hoje?',hint:'Ou ficou travado, indeciso, demorou muito pra escolher coisas simples?',key:'decisao',opts:[['Não, tive muita dificuldade',2],['Tive alguma dificuldade',5],['Mais ou menos',7],['Sim, decidi bem',10]]},
-  {cat:'Sua cabeça hoje',q:'Você terminou as coisas que começou hoje?',hint:'Ou ficou saltando de tarefa em tarefa sem concluir nada?',key:'completar_tarefas',opts:[['Não terminei quase nada',2],['Terminei poucas coisas',4],['Terminei metade',6],['Terminei a maioria',8],['Terminei tudo',10]]},
-  {cat:'Sua cabeça hoje',q:'Você foi criativo ou teve novas ideias hoje?',hint:'Resolveu problemas de um jeito diferente, pensou fora da caixa.',key:'criatividade',opts:[['Não me senti criativo de jeito nenhum',2],['Pouco',5],['Um pouco criativo',7],['Sim, tive boas ideias',10]]},
+  {cat:'Sua cabeça hoje',q:'Você conseguiu fazer o que precisava hoje?',hint:'Pense nas suas tarefas do dia — trabalho, escola, afazeres em casa.',key:'produtividade',opts:[['Não consegui fazer nada',2],['Fiz muito pouco',4],['Fiz a metade do que queria',6],['Fiz a maior parte',8],['Fiz tudo que precisava',10]]},
+  {cat:'Sua cabeça hoje',q:'Você tomou decisões difíceis ou precisou resolver problemas complexos hoje?',hint:'Situações que exigiram muito raciocínio e deliberação.',key:'decisoes',opts:[['Sim, muitas decisões pesadas',2],['Algumas decisões difíceis',5],['Decisões rotineiras',8],['Dia sem grandes decisões',10]]},
+  {cat:'Sua cabeça hoje',q:'Você conseguiu terminar o que começou hoje?',hint:'Ou ficou deixando tarefas pela metade por distração?',key:'conclusao',opts:[['Quase nada foi concluído',2],['Terminei pouca coisa',4],['Terminei a maioria',7],['Terminei tudo que comecei',10]]},
+  {cat:'Sua cabeça hoje',q:'Você teve pensamentos repetitivos ou ruminação hoje?',hint:'Ficou girando o mesmo pensamento ou preocupação na cabeça.',key:'ruminacao',opts:[['Sim, o tempo todo',2],['Bastante ruminar',4],['Um pouco',6],['Mente tranquila e presente',10]]},
+  {cat:'Sua cabeça hoje',q:'Você conseguiu se manter presente nas atividades que fazia?',hint:'Ou estava fazendo uma coisa mas pensando em outra.',key:'presenca',opts:[['Nunca estava presente',2],['Raramente',4],['Na maior parte do tempo',7],['Totalmente presente e engajado',10]]},
+  {cat:'Sua cabeça hoje',q:'Você teve dificuldade em lembrar de coisas ou sentiu a memória falhando?',hint:'Esqueceu compromissos, onde colocou coisas, o que ia fazer.',key:'memoria',opts:[['Sim, muitos esquecimentos',2],['Alguns esquecimentos',5],['Memória normal',8],['Memória afiada hoje',10]]},
 
-  // --- EMOÇÕES (21–28) ---
-  {cat:'Como você se sentiu',q:'Você se sentiu nervoso ou sob pressão hoje?',hint:'Aquela sensação de que tem muita coisa acontecendo e precisa dar conta de tudo.',key:'estresse',opts:[['Nada, dia super tranquilo',2],['Um pouquinho',4],['Sim, bastante',6],['Muito estressado',8],['Um dos piores dias',10]]},
-  {cat:'Como você se sentiu',q:'Você ficou preocupado ou ansioso ao longo do dia?',hint:'Cabeça que não para, coração acelerado, pensamentos sobre o futuro.',key:'ansiedade',opts:[['Nada, fiquei tranquilo',2],['Um pouquinho',4],['Em alguns momentos',6],['Boa parte do dia',8],['A ansiedade tomou conta',10]]},
-  {cat:'Como você se sentiu',q:'Como estava seu humor hoje no geral?',hint:'Se alguém perguntasse "como você está?" de verdade — o que você diria?',key:'humor',opts:[['Me senti muito mal',2],['Estava para baixo',4],['Neutro, nem bem nem mal',6],['Estava bem',8],['Me senti ótimo',10]]},
-  {cat:'Como você se sentiu',q:'Você ficou irritado ou impaciente com algo ou alguém hoje?',hint:'Situações em que você perdeu a paciência mais fácil que o normal.',key:'irritabilidade',opts:[['Sim, estava irritado com tudo',2],['Me irritei algumas vezes',5],['Quase não me irritei',7],['Fui super calmo o dia todo',10]]},
-  {cat:'Como você se sentiu',q:'Você se sentiu triste ou sem vontade de nada hoje?',hint:'Aquela sensação de vazio, de não ter graça as coisas.',key:'tristeza',opts:[['Sim, muito triste',2],['Um pouco',5],['Quase nada',8],['Nada de tristeza',10]]},
-  {cat:'Como você se sentiu',q:'Você se sentiu sobrecarregado em algum momento hoje?',hint:'A sensação de que é demais para uma pessoa só lidar.',key:'sobrecarga',opts:[['Sim, o tempo todo',2],['Em vários momentos',4],['Em um momento ou dois',6],['Raramente',8],['Não me senti sobrecarregado',10]]},
-  {cat:'Como você se sentiu',q:'Você se sentiu com medo ou inseguro sobre algo hoje?',hint:'Medo de errar, de ser julgado, de o futuro não dar certo.',key:'medo',opts:[['Sim, muito',2],['Um pouco',5],['Raramente',8],['Nada de medo hoje',10]]},
-  {cat:'Como você se sentiu',q:'Você sentiu algum momento de alegria genuína hoje?',hint:'Algo que te fez sorrir de verdade, que te deu prazer real.',key:'alegria',opts:[['Não senti nada de alegria',2],['Um momento bem pequeno',4],['Alguns momentos',6],['Vários momentos bons',8],['Foi um dia muito alegre',10]]},
+  // EMOÇÕES (8)
+  {cat:'Como você se sentiu',q:'Você se sentiu nervoso ou sob pressão hoje?',hint:'Aquela sensação de que tem muita coisa acontecendo.',key:'estresse',opts:[['Nada, dia super tranquilo',2],['Um pouquinho',4],['Sim, bastante',6],['Muito estressado',8],['Foi um dos piores dias',10]]},
+  {cat:'Como você se sentiu',q:'Você ficou preocupado ou ansioso ao longo do dia?',hint:'Cabeça que não para, pensamentos negativos sobre o futuro.',key:'ansiedade',opts:[['Nada, fiquei tranquilo',2],['Um pouquinho',4],['Em alguns momentos',6],['Boa parte do dia',8],['Fui tomado pela ansiedade',10]]},
+  {cat:'Como você se sentiu',q:'Como estava seu humor hoje, no geral?',hint:'Se alguém perguntasse "como você está?" de verdade — o que diria?',key:'humor',opts:[['Me senti muito mal',2],['Estava pra baixo',4],['Neutro, nem bem nem mal',6],['Estava bem',8],['Me senti ótimo',10]]},
+  {cat:'Como você se sentiu',q:'Você ficou irritado ou impaciente com algo ou alguém hoje?',hint:'Situações em que perdeu a paciência mais fácil do normal.',key:'irritabilidade',opts:[['Sim, estava irritado com tudo',2],['Me irritei algumas vezes',5],['Quase não me irritei',7],['Fui super calmo o dia todo',10]]},
+  {cat:'Como você se sentiu',q:'Você sentiu alegria ou momentos positivos genuínos hoje?',hint:'Situações que te fizeram sorrir ou sentir bem de verdade.',key:'alegria',opts:[['Não senti nada positivo',2],['Raros momentos',4],['Alguns momentos bons',7],['Muitos momentos de alegria',10]]},
+  {cat:'Como você se sentiu',q:'Você se sentiu sobrecarregado emocionalmente hoje?',hint:'A sensação de não aguentar mais, de estar no limite.',key:'sobrecarga_emocional',opts:[['Completamente sobrecarregado',2],['Bastante pesado',4],['Um pouco pesado',6],['Emocional mente equilibrado',9],['Leve e tranquilo',10]]},
+  {cat:'Como você se sentiu',q:'Você se sentiu com medo de algo hoje?',hint:'Medos de falhar, de julgamento, de situações específicas.',key:'medo',opts:[['Medo intenso o dia todo',2],['Bastante ansiedade e medo',4],['Um pouco de receio',6],['Sem medos significativos',10]]},
+  {cat:'Como você se sentiu',q:'Você se sentiu culpado ou se criticou muito hoje?',hint:'Autocrítica excessiva, sensação de não ser suficiente.',key:'culpa',opts:[['Muita autocrítica e culpa',2],['Bastante autocrítica',4],['Um pouco',6],['Fui gentil comigo mesmo',10]]},
 
-  // --- TELAS E DESCANSO (29–33) ---
-  {cat:'Telas e descanso',q:'Quantas horas você ficou no celular, computador ou TV hoje?',hint:'Some tudo — trabalho, redes sociais, streaming, videogame.',key:'tela',opts:[['Menos de 2 horas',2],['2 a 4 horas',5],['4 a 6 horas',7],['6 a 8 horas',9],['Mais de 8 horas',10]]},
-  {cat:'Telas e descanso',q:'Você se sentiu esgotado de tanta tela ou informação hoje?',hint:'Olhos cansados, cabeça cheia, enjoo de tanto scroll.',key:'fadiga',opts:[['Não, me senti bem',2],['Um pouquinho',4],['Sim, já estava saturado',6],['Bastante cansado',8],['Completamente esgotado',10]]},
-  {cat:'Telas e descanso',q:'Você parou para descansar durante o dia?',hint:'Pode ser tomar um café, se alongar, dar uma caminhada ou fechar os olhos por 5 minutos.',key:'pausas',opts:[['Não parei em nenhum momento',0],['Parei 1 ou 2 vezes',4],['Parei algumas vezes',7],['Fiz várias pausas ao longo do dia',10]]},
-  {cat:'Telas e descanso',q:'Você ficou rolando o feed do celular sem propósito hoje?',hint:'Scrollar por scrollar, sem saber bem por quê ou o que estava procurando.',key:'scroll_sem_foco',opts:[['Sim, por horas',2],['Bastante',4],['Um pouco',7],['Quase nada',10]]},
-  {cat:'Telas e descanso',q:'Você ficou comparando sua vida com a de outras pessoas nas redes hoje?',hint:'Sentiu inveja ou se sentiu para baixo vendo a vida dos outros online.',key:'comparacao_social',opts:[['Sim, muito',2],['Algumas vezes',5],['Raramente',8],['Não me comparei',10]]},
+  // TELAS & PAUSAS (5)
+  {cat:'Telas e descanso',q:'Quantas horas você ficou em telas hoje?',hint:'Some tudo — trabalho, redes sociais, streaming, videogame.',key:'tela',opts:[['Menos de 2 horas',2],['Umas 2 a 4 horas',5],['Umas 4 a 6 horas',7],['Umas 6 a 8 horas',9],['Mais de 8 horas',10]]},
+  {cat:'Telas e descanso',q:'Você se sentiu esgotado de tanta tela ou informação hoje?',hint:'Olhos cansados, cabeça cheia, enjoo de tanto scroll.',key:'fadiga',opts:[['Não, me senti bem',2],['Um pouquinho',4],['Sim, já estava saturado',6],['Bastante cansado de tanta tela',8],['Me senti completamente esgotado',10]]},
+  {cat:'Telas e descanso',q:'Você parou para descansar durante o dia?',hint:'Tomar café, se alongar, dar uma caminhada, fechar os olhos 5 minutos.',key:'pausas',opts:[['Não parei em nenhum momento',0],['Parei 1 ou 2 vezes',4],['Parei algumas vezes',7],['Fiz várias pausas ao longo do dia',10]]},
+  {cat:'Telas e descanso',q:'Você ficou verificando o celular compulsivamente hoje?',hint:'Abrir e fechar apps, checar notificações sem motivo.',key:'celular',opts:[['Sim, o tempo todo',2],['Bastante compulsivo',4],['Algumas vezes sem necessidade',6],['Usei o celular conscientemente',10]]},
+  {cat:'Telas e descanso',q:'Você teve algum momento de lazer sem telas hoje?',hint:'Ler um livro, conversar, caminhar, apenas ficar sentado sem dispositivos.',key:'lazer_sem_tela',opts:[['Nenhum momento',2],['Muito pouco',4],['Algum tempo',7],['Bastante tempo offline',10]]},
 
-  // --- RELAÇÕES E PESSOAS (34–38) ---
+  // PESSOAS (5)
   {cat:'Pessoas ao seu redor',q:'Você teve contato com pessoas que gosta hoje?',hint:'Família, amigos, colegas — pessoalmente, por mensagem ou ligação.',key:'social',opts:[['Fiquei sozinho o dia todo',2],['Tive pouco contato',4],['Conversei com algumas pessoas',6],['Tive boas interações',8],['Foi um dia muito bom de conexões',10]]},
-  {cat:'Pessoas ao seu redor',q:'Você se sentiu entendido e aceito pelas pessoas ao seu redor?',hint:'Sentiu que pode ser você mesmo, que as pessoas te veem de verdade.',key:'pertencimento',opts:[['Não, me senti excluído',2],['Mais ou menos',5],['Razoavelmente aceito',7],['Sim, muito bem aceito',10]]},
-  {cat:'Pessoas ao seu redor',q:'Você teve algum conflito ou desentendimento com alguém hoje?',hint:'Discussão, mal-entendido, tensão com alguém.',key:'conflito',opts:[['Sim, um conflito grande',2],['Alguma tensão',5],['Nada relevante',8],['Nenhum conflito',10]]},
-  {cat:'Pessoas ao seu redor',q:'Você ajudou ou apoiou alguém hoje?',hint:'Dar uma palavra, um conselho, um favor — algo que fez diferença pra alguém.',key:'ajudar',opts:[['Não ajudei ninguém',4],['Talvez um pouquinho',6],['Sim, ajudei alguém',8],['Me dediquei bastante a ajudar',10]]},
-  {cat:'Pessoas ao seu redor',q:'Você se sentiu só ou isolado hoje?',hint:'Mesmo que estivesse rodeado de gente — aquela solidão por dentro.',key:'solidao',opts:[['Sim, muito solitário',2],['Um pouco',5],['Quase nada',8],['Não me senti sozinho',10]]},
+  {cat:'Pessoas ao seu redor',q:'Você sentiu que foi ouvido e compreendido por alguém hoje?',hint:'Alguém que realmente prestou atenção no que você disse.',key:'sentir_ouvido',opts:[['Não, me senti ignorado',2],['Pouco',4],['Em algum momento',7],['Me senti muito compreendido',10]]},
+  {cat:'Pessoas ao seu redor',q:'Você teve algum conflito ou desentendimento com alguém hoje?',hint:'Discutiu, teve mal-entendido ou sentiu tensão em alguma relação.',key:'conflito',opts:[['Sim, conflito sério',2],['Alguma tensão',5],['Desentendimento pequeno',7],['Nenhum conflito hoje',10]]},
+  {cat:'Pessoas ao seu redor',q:'Você se sentiu amado ou cuidado por alguém hoje?',hint:'Gestos de carinho, afeto, atenção de alguém especial.',key:'amor',opts:[['Não, me senti muito sozinho',2],['Pouco',4],['Sim, em alguma medida',7],['Muito amado e apoiado',10]]},
+  {cat:'Pessoas ao seu redor',q:'Você contribuiu positivamente na vida de alguém hoje?',hint:'Ajudou alguém, fez alguém sorrir, ofereceu apoio.',key:'contribuicao',opts:[['Não interagi com ninguém',2],['Interações neutras',5],['Ajudei alguém um pouco',8],['Fiz algo positivo por alguém',10]]},
 
-  // --- MOTIVAÇÃO E PROPÓSITO (39–43) ---
-  {cat:'Motivação e propósito',q:'Você sentiu vontade de fazer as coisas hoje?',hint:'Aquela sensação de ter um motivo para ir em frente.',key:'motivacao',opts:[['Não tinha vontade de nada',2],['Estava bem desmotivado',4],['Mais ou menos animado',6],['Estava motivado',8],['Me senti cheio de propósito',10]]},
-  {cat:'Motivação e propósito',q:'Você sentiu que o que fez hoje teve algum sentido?',hint:'Que não foi só passar o tempo, que valeu a pena.',key:'sentido',opts:[['Não, parece que nada tem sentido',2],['Pouco',5],['Razoavelmente',7],['Sim, me senti útil e importante',10]]},
-  {cat:'Motivação e propósito',q:'Você se sentiu curioso ou interessado em aprender algo hoje?',hint:'Teve vontade de pesquisar, entender, descobrir algo novo.',key:'curiosidade',opts:[['Não me interessei por nada',2],['Um pouquinho',5],['Razoavelmente curioso',7],['Muito curioso e engajado',10]]},
-  {cat:'Motivação e propósito',q:'Você fez alguma coisa que te deixa orgulhoso hoje?',hint:'Algo pequeno ou grande que você olha para trás e pensa "fiz bem".',key:'orgulho',opts:[['Não, nada',2],['Uma coisinha',5],['Uma coisa boa',7],['Sim, estou orgulhoso do meu dia',10]]},
-  {cat:'Motivação e propósito',q:'Você se preocupou com o futuro mais do que o normal hoje?',hint:'Ansiedade sobre o que vai acontecer, incerteza, medo do amanhã.',key:'preocupacao_futuro',opts:[['Sim, o tempo todo',2],['Bastante',4],['Um pouco',6],['Quase nada',8],['Não me preocupei com o futuro',10]]},
+  // MOTIVAÇÃO & PROPÓSITO (5)
+  {cat:'Motivação e propósito',q:'Você sentiu vontade de fazer as coisas hoje? Tinha ânimo?',hint:'Aquela sensação de ter um motivo para ir em frente.',key:'motivacao',opts:[['Não tinha vontade de nada',2],['Estava bem desmotivado',4],['Mais ou menos animado',6],['Estava motivado',8],['Me senti cheio de propósito',10]]},
+  {cat:'Motivação e propósito',q:'Você fez alguma coisa que te traz satisfação ou prazer hoje?',hint:'Uma atividade que recarrega sua energia ou faz sentido para você.',key:'satisfacao',opts:[['Nada que me satisfez',2],['Muito pouca coisa',4],['Algo pequeno',7],['Sim, fiz algo que adoro',10]]},
+  {cat:'Motivação e propósito',q:'Você sentiu que o seu dia teve algum sentido ou direção?',hint:'A sensação de que o que você fez importa de alguma forma.',key:'proposito',opts:[['Dia vazio, sem propósito',2],['Pouco sentido',4],['Algum sentido',7],['Dia cheio de significado',10]]},
+  {cat:'Motivação e propósito',q:'Você ficou procrastinando ou evitando tarefas importantes?',hint:'Deixar para depois, se distrair, enrolar antes de começar.',key:'procrastinacao',opts:[['Procrastinei o dia todo',2],['Bastante procrastinação',4],['Um pouco',6],['Fui muito direto nas tarefas',10]]},
+  {cat:'Motivação e propósito',q:'Você sentiu que avançou em direção a algum objetivo seu hoje?',hint:'Qualquer meta — pessoal, profissional, saúde, aprendizado.',key:'avanco',opts:[['Não avancei em nada',2],['Praticamente nada',4],['Um pequeno avanço',7],['Avanço significativo',10]]},
 
-  // --- AUTOCUIDADO E ROTINA (44–49) ---
-  {cat:'Cuidando de você',q:'Você fez alguma coisa boa por você mesmo hoje?',hint:'Algo que te fez bem — descansar, ouvir música, tomar um banho gostoso, hobby.',key:'autocuidado',opts:[['Não fiz nada por mim',2],['Quase nada',4],['Uma coisinha pequena',6],['Sim, me cuidei',8],['Me dediquei bastante a mim',10]]},
-  {cat:'Cuidando de você',q:'Você fez algo prazeroso ou divertido hoje?',hint:'Hobby, música, leitura, jogar, cozinhar — algo só pelo prazer.',key:'lazer',opts:[['Nada de prazer hoje',2],['Um minutinho',4],['Um pouco',6],['Sim, me diverti',8],['Tive muito tempo de lazer',10]]},
-  {cat:'Cuidando de você',q:'Você se sentiu no controle da sua rotina hoje?',hint:'Ou a rotina te controlou, e você ficou só apagando incêndios?',key:'controle_rotina',opts:[['Não, tudo fugiu do controle',2],['Pouco controle',4],['Mais ou menos',6],['Bem no controle',8],['Totalmente no controle',10]]},
-  {cat:'Cuidando de você',q:'Você passou um tempo na natureza ou ao ar livre hoje?',hint:'Nem que seja uns 5 minutos num parque, sacada ou janela aberta.',key:'natureza',opts:[['Não saí de dentro de casa',2],['Pouquíssimo',4],['Um pouco',7],['Sim, um bom tempo ao ar livre',10]]},
-  {cat:'Cuidando de você',q:'Você praticou algo para relaxar a cabeça hoje?',hint:'Meditação, respiração, ouvir música sem fazer nada, só sentar em silêncio.',key:'relaxamento',opts:[['Não tive nenhum momento de relaxamento',2],['Quase nada',4],['Um pouco',6],['Sim, me relaxei de verdade',8],['Tive bastante tempo de relaxamento',10]]},
-  {cat:'Cuidando de você',q:'Você foi gentil com você mesmo quando errou algo hoje?',hint:'Ou se criticou muito, ficou se chamando de burro, incompetente?',key:'autocompaixao',opts:[['Fui muito duro comigo mesmo',2],['Me critiquei bastante',4],['Mais ou menos',6],['Fui razoavelmente compreensivo',8],['Fui gentil e compassivo comigo',10]]},
-
-  // --- ENERGIA FINAL (50) ---
-  {cat:'Fechando o dia',q:'Como você está de energia agora, no final do dia?',hint:'Como você se sente nesse momento — tem pique para mais alguma coisa?',key:'energia',opts:[['Completamente esgotado',2],['Bem cansado',4],['Mais ou menos',6],['Com energia ainda',8],['Me sinto ótimo',10]]},
+  // AUTOCUIDADO (5)
+  {cat:'Cuidando de você',q:'Você fez alguma coisa boa por você mesmo hoje?',hint:'Algo que te fez bem — descansar, ouvir música, tomar banho gostoso.',key:'autocuidado',opts:[['Não fiz nada por mim',2],['Quase nada',4],['Uma coisinha pequena',6],['Sim, me cuidei',8],['Me dediquei bastante a mim',10]]},
+  {cat:'Cuidando de você',q:'Você expressou seus sentimentos de alguma forma hoje?',hint:'Conversou sobre como se sente, escreveu, ou encontrou outra válvula.',key:'expressao',opts:[['Guardei tudo para mim',2],['Quase não expressei',4],['Expressou um pouco',7],['Me expressei bem hoje',10]]},
+  {cat:'Cuidando de você',q:'Você teve tempo para si mesmo — um momento de silêncio ou solidão restauradora?',hint:'Diferente de isolamento — é o tempo de qualidade consigo mesmo.',key:'tempo_proprio',opts:[['Nenhum momento',2],['Muito pouco',4],['Algum tempo',7],['Tive bom tempo comigo mesmo',10]]},
+  {cat:'Cuidando de você',q:'Você praticou alguma forma de gratidão ou pensamento positivo hoje?',hint:'Percebeu algo bom, agradeceu mentalmente ou reconheceu um momento positivo.',key:'gratidao',opts:[['Não, mente muito negativa',2],['Quase nada positivo',4],['Alguma gratidão',7],['Muito grato e positivo',10]]},
+  {cat:'Cuidando de você',q:'Como você está de energia agora, no final do dia?',hint:'Como você se sente neste momento — tem pique para mais alguma coisa?',key:'energia',opts:[['Completamente esgotado',2],['Bem cansado',4],['Mais ou menos',6],['Com energia ainda',8],['Me sinto ótimo',10]]},
 ];
 
-const quickQuestions = [
+const quickQuestions=[
   fullQuestions[0],   // sono
-  fullQuestions[6],   // energia manhã
-  fullQuestions[20],  // estresse
-  fullQuestions[22],  // humor
-  fullQuestions[38],  // motivação
-  fullQuestions[21],  // ansiedade
-  fullQuestions[14],  // foco
-  fullQuestions[32],  // scroll
-  fullQuestions[43],  // autocuidado
-  fullQuestions[49],  // energia final
+  fullQuestions[6],   // energia_manha
+  fullQuestions[14],  // carga
+  fullQuestions[22],  // estresse
+  fullQuestions[23],  // ansiedade
+  fullQuestions[24],  // humor
+  fullQuestions[28],  // alegria
+  fullQuestions[35],  // social
+  fullQuestions[42],  // motivacao
+  fullQuestions[49],  // energia
 ];
 
-let questions = fullQuestions;
+let questions=fullQuestions;
 
-/* ====== CLOUD STORAGE ====== */
-async function cloudSave(key,value){
-  try{ await window.storage.set('np_'+key,JSON.stringify(value)); }
-  catch(e){ localStorage.setItem('np_'+key,JSON.stringify(value)); }
-}
-async function cloudGet(key){
-  try{ const r=await window.storage.get('np_'+key); return r?JSON.parse(r.value):null; }
-  catch(e){ const v=localStorage.getItem('np_'+key); return v?JSON.parse(v):null; }
-}
-async function cloudDelete(key){
-  try{ await window.storage.delete('np_'+key); }catch(e){}
-  localStorage.removeItem('np_'+key);
-}
+// ─── STORAGE ────────────────────────────────────────────────────────────────
+async function cloudSave(key,value){try{await window.storage.set('np_'+key,JSON.stringify(value));}catch(e){localStorage.setItem('np_'+key,JSON.stringify(value));}}
+async function cloudGet(key){try{const r=await window.storage.get('np_'+key);return r?JSON.parse(r.value):null;}catch(e){const v=localStorage.getItem('np_'+key);return v?JSON.parse(v):null;}}
+async function cloudDelete(key){try{await window.storage.delete('np_'+key);}catch(e){}localStorage.removeItem('np_'+key);}
 
-/* ====== THEME ====== */
+// ─── THEME ───────────────────────────────────────────────────────────────────
 function toggleTheme(){
-  const t=document.documentElement.getAttribute('data-theme')==='light'?'dark':'light';
+  const t=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';
   document.documentElement.setAttribute('data-theme',t);
-  document.querySelectorAll('.theme-toggle:not(.sound-toggle)').forEach(b=>b.textContent=t==='light'?'🌙':'☀️');
+  const icon=t==='dark'?'&#9790;':'&#9788;';
+  document.querySelectorAll('[id^="themeToggle"]').forEach(b=>b.innerHTML=icon);
   localStorage.setItem('np_theme',t);
 }
 function loadTheme(){
-  const t=localStorage.getItem('np_theme')||'dark';
+  const t=localStorage.getItem('np_theme')||'light';
   document.documentElement.setAttribute('data-theme',t);
-  document.querySelectorAll('.theme-toggle:not(.sound-toggle)').forEach(b=>b.textContent=t==='light'?'🌙':'☀️');
+  const icon=t==='dark'?'&#9790;':'&#9788;';
+  document.querySelectorAll('[id^="themeToggle"]').forEach(b=>b.innerHTML=icon);
 }
 
-/* ====== NAV ====== */
+function toggleSound(){
+  soundEnabled=!soundEnabled;
+  localStorage.setItem('np_sound',soundEnabled?'on':'off');
+  const icon=soundEnabled?'&#9834;':'&#9835;';
+  document.querySelectorAll('[id^="soundToggle"]').forEach(b=>b.innerHTML=icon);
+}
+function syncSoundIcons(){
+  const icon=soundEnabled?'&#9834;':'&#9835;';
+  document.querySelectorAll('[id^="soundToggle"]').forEach(b=>b.innerHTML=icon);
+}
+
+// ─── NAVIGATION ──────────────────────────────────────────────────────────────
 function goTo(id){
   document.querySelectorAll('.screen').forEach(s=>{s.classList.remove('active');s.style.display='none';});
   const el=document.getElementById(id);
@@ -559,84 +726,75 @@ function goTo(id){
   requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('active')));
 }
 
-/* ====== ALERT ====== */
+// ─── AUTH ─────────────────────────────────────────────────────────────────────
 function showAlert(msg,type='err'){
   const el=document.getElementById('authAlert');
-  el.textContent=msg; el.className='alert '+type+' show';
+  el.textContent=msg;el.className='alert '+type+' show';
   setTimeout(()=>el.classList.remove('show'),3500);
 }
-
-/* ====== FORM ====== */
 function toggleForm(w){
   document.getElementById('loginForm').style.display=w==='login'?'block':'none';
   document.getElementById('signupForm').style.display=w==='signup'?'block':'none';
 }
+async function getUsers(){return(await cloudGet('users'))||{};}
+async function saveUsers(u){await cloudSave('users',u);}
 
-/* ====== USERS ====== */
-async function getUsers(){ return (await cloudGet('users'))||{}; }
-async function saveUsers(u){ await cloudSave('users',u); }
-
-/* ====== AUTH ====== */
 async function signup(){
   const u=document.getElementById('su_user').value.trim();
   const p=document.getElementById('su_pass').value.trim();
-  if(!u||!p) return showAlert('Preencha usuário e senha.');
+  if(!u||!p)return showAlert('Preencha usuário e senha.');
   const users=await getUsers();
-  if(users[u]) return showAlert('Esse usuário já existe.');
-  users[u]={password:p}; await saveUsers(users);
-  showAlert('Conta criada! Faça login.','ok'); toggleForm('login');
+  if(users[u])return showAlert('Esse usuário já existe.');
+  users[u]={password:p};await saveUsers(users);
+  showAlert('Conta criada. Faça login.','ok');toggleForm('login');
 }
 async function login(){
   const u=document.getElementById('li_user').value.trim();
   const p=document.getElementById('li_pass').value.trim();
   const users=await getUsers();
-  if(!users[u]||users[u].password!==p) return showAlert('Usuário ou senha inválidos.');
-  currentUser=u; await cloudSave('current',u); await goToStart();
+  if(!users[u]||users[u].password!==p)return showAlert('Usuário ou senha inválidos.');
+  currentUser=u;await cloudSave('current',u);playLogin();await goToStart();
 }
-function logout(){ closeModal(); currentUser=null; cloudDelete('current'); goTo('homeScreen'); }
+function logout(){closeModal();currentUser=null;cloudDelete('current');goTo('homeScreen');}
+function confirmLogout(){document.getElementById('logoutModal').classList.add('open');}
+function closeModal(){document.getElementById('logoutModal').classList.remove('open');}
+document.getElementById('logoutModal').addEventListener('click',function(e){if(e.target===this)closeModal();});
 
-/* ====== MODAL ====== */
-function confirmLogout(){ document.getElementById('logoutModal').classList.add('open'); }
-function closeModal(){ document.getElementById('logoutModal').classList.remove('open'); }
-document.getElementById('logoutModal').addEventListener('click',function(e){ if(e.target===this)closeModal(); });
-
-/* ====== STREAK ====== */
+// ─── STREAK & TRENDS ─────────────────────────────────────────────────────────
 function calcStreak(data){
-  if(!data||!data.length) return 0;
+  if(!data||!data.length)return 0;
   let streak=0;
   const sorted=[...data].sort((a,b)=>new Date(b.date)-new Date(a.date));
   const dates=sorted.map(d=>d.date);
   let check=new Date();
   for(let i=0;i<30;i++){
     const d=check.toLocaleDateString('pt-BR');
-    if(dates.includes(d)){ streak++; }
-    else if(i>0) break;
+    if(dates.includes(d)){streak++;}else if(i>0)break;
     check.setDate(check.getDate()-1);
   }
   return streak;
 }
 
-/* ====== TREND ALERTS ====== */
 function buildTrendAlerts(data){
-  if(!data||data.length<3) return '';
+  if(!data||data.length<3)return'';
   const last3=data.slice(-3);
   const alerts=[];
   const burnouts=last3.map(d=>d.r.burnout);
   const energias=last3.map(d=>d.r.energia);
   if(burnouts[2]>burnouts[1]&&burnouts[1]>burnouts[0]&&burnouts[2]>=60)
-    alerts.push({cls:'bad',msg:'Seu nível de burnout está subindo há 3 dias seguidos. Considere reduzir sua carga esta semana.'});
+    alerts.push({cls:'bad',msg:'O nível de burnout está subindo há três dias seguidos. Considere reduzir a carga esta semana.'});
   if(energias[2]<energias[1]&&energias[1]<energias[0]&&energias[2]<=40)
-    alerts.push({cls:'bad',msg:'Sua energia está caindo há 3 dias. Foque em sono e hidratação hoje.'});
+    alerts.push({cls:'bad',msg:'A sua energia está caindo há três dias. Foque em sono e hidratação hoje.'});
   if(burnouts[2]<burnouts[1]&&burnouts[2]<50)
-    alerts.push({cls:'ok',msg:'Seu burnout caiu em relação a ontem. Bom trabalho cuidando de você!'});
+    alerts.push({cls:'ok',msg:'O burnout recuou em relação a ontem. Bom trabalho cuidando de você.'});
   if(energias[2]>energias[1]&&energias[2]>=70)
-    alerts.push({cls:'ok',msg:'Sua energia está em alta! Aproveite para tarefas mais desafiadoras.'});
+    alerts.push({cls:'ok',msg:'A sua energia está em alta. Aproveite para as tarefas mais desafiadoras.'});
   return alerts.map(a=>'<div class="trend-alert '+a.cls+'">'+a.msg+'</div>').join('');
 }
 
-/* ====== START SCREEN ====== */
+// ─── START ────────────────────────────────────────────────────────────────────
 async function goToStart(){
-  document.getElementById('startUserPill').textContent='👤 '+currentUser;
+  document.getElementById('startUserPill').textContent='&#9670; '+currentUser;
   allData=(await cloudGet(currentUser+'_data'))||[];
   lastDashData=allData.length?allData:null;
   document.getElementById('viewDashBtn').style.display=allData.length?'block':'none';
@@ -644,21 +802,21 @@ async function goToStart(){
   if(streak>0){
     document.getElementById('streakBar').style.display='flex';
     document.getElementById('streakNum').textContent=streak;
-    document.getElementById('streakText').textContent=streak===1?'dia seguido!':streak+' dias seguidos!';
-  } else { document.getElementById('streakBar').style.display='none'; }
+    document.getElementById('streakText').textContent=streak===1?'dia seguido':streak+' dias seguidos';
+  }else{document.getElementById('streakBar').style.display='none';}
   document.getElementById('trendAlertsStart').innerHTML=buildTrendAlerts(allData);
-  goTo('startScreen');
+  syncSoundIcons();goTo('startScreen');
 }
-async function viewLastDash(){ if(lastDashData) showDash(lastDashData); }
+async function viewLastDash(){if(lastDashData)showDash(lastDashData);}
 
-/* ====== QUIZ ====== */
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
 function startQuiz(mode){
   quizMode=mode||'full';
   questions=mode==='quick'?quickQuestions:fullQuestions;
-  step=0; answers={}; answerHistory=[];
+  step=0;answers={};answerHistory=[];
   document.getElementById('noteSection').style.display='none';
   document.getElementById('dayNote').value='';
-  goTo('quizScreen'); renderQ();
+  goTo('quizScreen');renderQ();
 }
 
 function renderQ(){
@@ -666,14 +824,14 @@ function renderQ(){
     if(quizMode==='full'){
       document.getElementById('noteSection').style.display='block';
       document.getElementById('quizOpts').innerHTML='<button class="btn btn-primary" onclick="finishQuiz()">Concluir check-in</button>';
-      document.getElementById('quizCat').textContent='Último passo (opcional)';
-      document.getElementById('quizQ').textContent='Quer registrar uma nota sobre o seu dia?';
+      document.getElementById('quizCat').textContent='Último passo';
+      document.getElementById('quizQ').textContent='Deseja registrar uma nota sobre o seu dia?';
       document.getElementById('quizHint').style.display='block';
-      document.getElementById('quizHint').textContent='Pode escrever qualquer coisa — algo que aconteceu, como você se sentiu, o que quer lembrar.';
+      document.getElementById('quizHint').textContent='Escreva qualquer coisa — algo que aconteceu, como se sentiu, o que quer lembrar.';
       document.getElementById('backBtn').style.display='block';
       document.getElementById('stepLabel').textContent='Nota do dia';
       document.getElementById('progressFill').style.width='100%';
-    } else { finishQuiz(); }
+    }else{finishQuiz();}
     return;
   }
   const pct=(step/questions.length)*100;
@@ -682,10 +840,8 @@ function renderQ(){
   const q=questions[step];
   document.getElementById('quizCat').textContent=q.cat||'';
   document.getElementById('quizQ').textContent=q.q;
-  if(q.hint){
-    document.getElementById('quizHint').style.display='block';
-    document.getElementById('quizHint').textContent=q.hint;
-  } else { document.getElementById('quizHint').style.display='none'; }
+  if(q.hint){document.getElementById('quizHint').style.display='block';document.getElementById('quizHint').textContent=q.hint;}
+  else{document.getElementById('quizHint').style.display='none';}
   document.getElementById('noteSection').style.display='none';
   const isFive=q.opts.length===5;
   const container=document.getElementById('quizOpts');
@@ -693,9 +849,12 @@ function renderQ(){
   container.innerHTML='';
   q.opts.forEach(function(o){
     const btn=document.createElement('button');
-    btn.className='opt-btn';
-    btn.textContent=o[0];
-    btn.addEventListener('click',function(){ answer(o[1]); });
+    btn.className='opt-btn';btn.textContent=o[0];
+    btn.addEventListener('click',function(){
+      playClick();
+      btn.classList.add('clicked');
+      setTimeout(()=>{answer(o[1]);},120);
+    });
     container.appendChild(btn);
   });
   document.getElementById('backBtn').style.display=step>0?'block':'none';
@@ -704,38 +863,38 @@ function renderQ(){
 function answer(v){
   answerHistory.push({step:step,answers:Object.assign({},answers)});
   answers[questions[step].key]=v;
-  step++; renderQ();
+  step++;renderQ();
 }
-
 function goBack(){
-  if(!answerHistory.length) return;
+  if(!answerHistory.length)return;
+  playBack();
   const prev=answerHistory.pop();
-  step=prev.step; answers=prev.answers; renderQ();
+  step=prev.step;answers=prev.answers;renderQ();
 }
 
-/* ====== SCORE (expanded for 50 questions) ====== */
+// ─── SCORES ──────────────────────────────────────────────────────────────────
 function calcScores(a){
   const g=v=>v||0;
-  // Energia: sono, horas_sono, energia_manha, energia, exercicio, alimentacao, hidratacao, acordou_descansado
+  // Energia: sono, horas_sono, qualidade_sono, energia_manha, energia, exercicio, alimentacao, hidratacao, respiracao
   const energia=Math.min(100,Math.round(
-    (g(a.sono)+g(a.horas_sono)+g(a.energia_manha)+g(a.energia)+g(a.exercicio)+g(a.alimentacao)+g(a.hidratacao)+g(a.acordou_descansado))*100/80
+    (g(a.sono)+g(a.horas_sono)+g(a.qualidade_sono||6)+g(a.energia_manha)+g(a.energia)+g(a.exercicio)+g(a.alimentacao)+g(a.hidratacao))*100/80
   ));
-  // Burnout: estresse, ansiedade, fadiga, sobrecarga, tensao_corporal, preocupacao_futuro
+  // Burnout: estresse, ansiedade, fadiga, carga, ruminacao, sobrecarga_emocional, tensao, sintomas_stress
   const burnout=Math.min(100,Math.round(
-    (g(a.estresse)+g(a.ansiedade)+g(a.fadiga)+g(a.sobrecarga)+g(a.tensao_corporal)+g(a.preocupacao_futuro))*100/60
+    (g(a.estresse)+g(a.ansiedade)+g(a.fadiga)+g(a.ruminacao||4))*100/40
   ));
-  // Bem-estar: humor, social, motivacao, autocuidado, alegria, pertencimento, sentido, autocompaixao
+  // Bem-estar: humor, social, motivacao, autocuidado, alegria, sentir_ouvido, amor, gratidao
   const bemestar=Math.min(100,Math.round(
-    (g(a.humor)+g(a.social)+g(a.motivacao)+g(a.autocuidado)+g(a.alegria)+g(a.pertencimento)+g(a.sentido)+g(a.autocompaixao))*100/80
+    (g(a.humor)+g(a.social)+g(a.motivacao)+g(a.autocuidado)+g(a.alegria||7)+g(a.gratidao||7))*100/60
   ));
-  // Produtividade: foco, produtividade, pausas, decisao, completar_tarefas, controle_rotina
+  // Produtividade: foco, produtividade, pausas, conclusao, avanco, procrastinacao
   const produtividade=Math.min(100,Math.round(
-    (g(a.foco)+g(a.produtividade)+g(a.pausas)+g(a.decisao)+g(a.completar_tarefas)+g(a.controle_rotina))*100/60
+    (g(a.foco)+g(a.produtividade)+g(a.pausas)+g(a.conclusao||7))*100/40
   ));
-  return {burnout,energia,bemestar,produtividade};
+  return{burnout,energia,bemestar,produtividade};
 }
 
-/* ====== FINISH ====== */
+// ─── FINISH ───────────────────────────────────────────────────────────────────
 async function finishQuiz(){
   const r=calcScores(answers);
   const note=document.getElementById('dayNote').value.trim();
@@ -744,241 +903,233 @@ async function finishQuiz(){
   allData.push(entry);
   await cloudSave(currentUser+'_data',allData);
   lastDashData=allData;
-  const icon=r.energia>=70&&r.burnout<=40?'🌟':r.burnout>=70?'😮‍💨':'✅';
-  const title=r.energia>=70&&r.burnout<=40?'Que dia incrível!':r.burnout>=70?'Você merece descanso.':'Check-in concluído!';
-  const sub='Energia: '+r.energia+' | Burnout: '+r.burnout+' | Bem-estar: '+r.bemestar;
+  const icon=r.energia>=70&&r.burnout<=40?'✦':r.burnout>=70?'—':'✦';
+  const title=r.energia>=70&&r.burnout<=40?'Um dia excelente.':r.burnout>=70?'Você merece descanso.':'Check-in concluído.';
+  const sub='Energia: '+r.energia+' · Burnout: '+r.burnout+' · Bem-estar: '+r.bemestar;
   document.getElementById('finishIcon').textContent=icon;
   document.getElementById('finishTitle').textContent=title;
   document.getElementById('finishSub').textContent=sub;
-  goTo('finishScreen');
-  launchConfetti();
+  goTo('finishScreen');launchConfetti();
 }
+function showDashFromFinish(){showDash(lastDashData);}
 
-function showDashFromFinish(){ showDash(lastDashData); }
-
-/* ====== CONFETTI ====== */
-function launchConfetti(){ soundFinish();
+function launchConfetti(){
+  playFinish();
   const canvas=document.createElement('canvas');
-  canvas.className='confetti';
-  document.body.appendChild(canvas);
+  canvas.className='confetti';document.body.appendChild(canvas);
   const ctx=canvas.getContext('2d');
-  canvas.width=window.innerWidth; canvas.height=window.innerHeight;
-  const pieces=Array.from({length:80},()=>({
-    x:Math.random()*canvas.width, y:-10,
-    r:Math.random()*6+3, c:['#4ade80','#f97316','#a78bfa','#60a5fa','#f43f5e'][Math.floor(Math.random()*5)],
-    v:Math.random()*3+2, a:Math.random()*Math.PI*2, spin:Math.random()*.2-.1
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const pieces=Array.from({length:60},()=>({
+    x:Math.random()*canvas.width,y:-10,
+    r:Math.random()*5+2,
+    c:['#9a7d4a','#2d4a3e','#c4a36a','#3d6456','#efe9dc'][Math.floor(Math.random()*5)],
+    v:Math.random()*2.5+1.5,a:Math.random()*Math.PI*2,spin:Math.random()*.15-.075
   }));
   let frame=0;
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     pieces.forEach(p=>{
-      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.a);
-      ctx.fillStyle=p.c; ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);
-      ctx.restore();
-      p.y+=p.v; p.a+=p.spin; p.x+=Math.sin(p.a)*.5;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.a);
+      ctx.fillStyle=p.c;ctx.fillRect(-p.r,-p.r/2,p.r*2,p.r);
+      ctx.restore();p.y+=p.v;p.a+=p.spin;p.x+=Math.sin(p.a)*.4;
     });
-    frame++;
-    if(frame<120) requestAnimationFrame(draw);
-    else canvas.remove();
+    frame++;if(frame<100)requestAnimationFrame(draw);else canvas.remove();
   }
   draw();
 }
 
-/* ====== RECOMMENDATIONS ====== */
+// ─── RECOMMENDATIONS ──────────────────────────────────────────────────────────
 function buildRecs(r,a){
-  const recs=[];
-  const g=v=>v||0;
-  if(g(a.sono)<=4||g(a.horas_sono)<=4) recs.push({icon:'😴',title:'Priorize o sono hoje',desc:'Seu sono foi ruim. Tente dormir 30 minutos mais cedo e evite celular após as 22h.',tag:'tag-urgent',tagText:'Urgente'});
-  if(r.burnout>=65) recs.push({icon:'🛑',title:'Sinalização de esgotamento',desc:'Seu nível de estresse está alto. Hoje: uma tarefa por vez, sem multitarefa.',tag:'tag-urgent',tagText:'Atenção'});
-  if(g(a.exercicio)<=2) recs.push({icon:'🚶',title:'Mova seu corpo amanhã',desc:'Sem atividade física hoje. Uma caminhada de 20 minutos já faz diferença no humor.',tag:'tag-tip',tagText:'Dica'});
-  if(g(a.hidratacao)<=4) recs.push({icon:'💧',title:'Beba mais água',desc:'Você não se hidratou bem. Desidratação causa cansaço e falta de concentração.',tag:'tag-tip',tagText:'Dica'});
-  if(g(a.social)<=4) recs.push({icon:'👋',title:'Conecte-se com alguém',desc:'Você ficou muito isolado. Mande uma mensagem para alguém que você gosta.',tag:'tag-tip',tagText:'Dica'});
-  if(g(a.pausas)<=2) recs.push({icon:'☕',title:'Pause mais amanhã',desc:'Sem pausas hoje. Nosso cérebro precisa de intervalos. Tente 5 min a cada hora.',tag:'tag-tip',tagText:'Dica'});
-  if(g(a.autocompaixao)<=3) recs.push({icon:'💛',title:'Seja mais gentil com você',desc:'Você foi duro consigo mesmo hoje. Erros fazem parte — tente se tratar como trataria um amigo.',tag:'tag-tip',tagText:'Dica'});
-  if(g(a.tensao_corporal)<=4) recs.push({icon:'🧘',title:'Relaxe o corpo',desc:'Seu corpo estava tenso. Um alongamento de 5 minutos antes de dormir faz muito bem.',tag:'tag-tip',tagText:'Dica'});
-  if(g(a.alegria)<=3) recs.push({icon:'🎉',title:'Crie um momento de alegria',desc:'Você teve pouco prazer hoje. Amanhã, separe 15 minutos para algo que você genuinamente curte.',tag:'tag-tip',tagText:'Dica'});
-  if(r.energia>=75&&r.burnout<=35) recs.push({icon:'🚀',title:'Você está ótimo hoje!',desc:'Energia alta e burnout baixo. Aproveite para tarefas criativas e desafiadoras.',tag:'tag-great',tagText:'Ótimo'});
-  if(r.bemestar>=75) recs.push({icon:'💛',title:'Bem-estar excelente!',desc:'Humor, motivação e conexões sociais em alta. Continue com o que está fazendo.',tag:'tag-great',tagText:'Ótimo'});
-  if(!recs.length) recs.push({icon:'👍',title:'Dia equilibrado',desc:'Nada crítico detectado. Continue mantendo seus hábitos e fique atento ao sono e hidratação.',tag:'tag-tip',tagText:'Dica'});
-  return recs.map(rec=>'<div class="rec-item"><div class="rec-icon">'+rec.icon+'</div><div><div class="rec-title">'+rec.title+'</div><div class="rec-desc">'+rec.desc+'</div><span class="rec-tag '+rec.tag+'">'+rec.tagText+'</span></div></div>').join('');
+  const recs=[];const g=v=>v||0;
+  if(g(a.sono)<=4||g(a.horas_sono)<=4)recs.push({icon:'—',title:'Priorize o sono esta noite',desc:'O seu sono foi insuficiente. Tente dormir 30 minutos mais cedo e evite telas após as 22h.',tag:'tag-urgent',tagText:'Atenção'});
+  if(g(a.tela_sono)<=4)recs.push({icon:'—',title:'Menos telas antes de dormir',desc:'Telas emitem luz azul que atrasa a melatonina. Pare 30 min antes de dormir.',tag:'tag-tip',tagText:'Dica'});
+  if(r.burnout>=65)recs.push({icon:'—',title:'Sinal de esgotamento',desc:'O nível de estresse e ansiedade está elevado. Uma tarefa por vez, sem multitarefa.',tag:'tag-urgent',tagText:'Atenção'});
+  if(g(a.ruminacao)<=4)recs.push({icon:'—',title:'Pensamentos repetitivos detectados',desc:'Tente escrever as preocupações em um papel. Externalizar ajuda a diminuir a ruminação.',tag:'tag-urgent',tagText:'Atenção'});
+  if(g(a.exercicio)<=2)recs.push({icon:'—',title:'Mova o corpo amanhã',desc:'Sem atividade física hoje. Uma caminhada de 20 minutos já transforma o humor.',tag:'tag-tip',tagText:'Dica'});
+  if(g(a.hidratacao)<=4)recs.push({icon:'—',title:'Beba mais água',desc:'Desidratação causa fadiga e reduz a concentração. Mantenha uma garrafa à vista.',tag:'tag-tip',tagText:'Dica'});
+  if(g(a.social)<=4)recs.push({icon:'—',title:'Conecte-se com alguém',desc:'Você ficou muito isolado. Mande uma mensagem para alguém de confiança.',tag:'tag-tip',tagText:'Dica'});
+  if(g(a.pausas)<=2)recs.push({icon:'—',title:'Pause mais amanhã',desc:'Sem intervalos hoje. O cérebro precisa de pausas para manter o foco. Cinco minutos a cada hora.',tag:'tag-tip',tagText:'Dica'});
+  if(g(a.procrastinacao)<=4)recs.push({icon:'—',title:'Procrastinação detectada',desc:'Tente a técnica Pomodoro: 25 min de foco, 5 min de pausa. Começo é o mais difícil.',tag:'tag-tip',tagText:'Dica'});
+  if(g(a.dor_fisica||8)<=4)recs.push({icon:'—',title:'Cuide do seu corpo',desc:'Desconforto físico afeta o humor e a concentração. Considere alongamento ou massagem.',tag:'tag-tip',tagText:'Dica'});
+  if(g(a.tensao||8)<=4)recs.push({icon:'—',title:'Relaxe a tensão muscular',desc:'Experimente respiração profunda por 5 min: inspire 4s, segure 4s, expire 6s.',tag:'tag-tip',tagText:'Dica'});
+  if(r.energia>=75&&r.burnout<=35)recs.push({icon:'—',title:'Você está em forma hoje',desc:'Energia alta, burnout baixo. Aproveite para as tarefas que exigem mais criatividade.',tag:'tag-great',tagText:'Ótimo'});
+  if(r.bemestar>=75)recs.push({icon:'—',title:'Bem-estar excelente',desc:'Humor, motivação e conexões sociais em alta. Continue com o que está fazendo.',tag:'tag-great',tagText:'Ótimo'});
+  if(g(a.gratidao||7)>=8)recs.push({icon:'—',title:'Mentalidade positiva forte',desc:'A prática de gratidão é um dos hábitos com mais evidência científica de impacto no bem-estar.',tag:'tag-great',tagText:'Ótimo'});
+  if(!recs.length)recs.push({icon:'—',title:'Dia equilibrado',desc:'Nada crítico detectado. Continue mantendo seus hábitos e fique atento ao sono.',tag:'tag-tip',tagText:'Dica'});
+  return recs.map(r=>'<div class="rec-item"><div class="rec-icon">'+r.icon+'</div><div><div class="rec-title">'+r.title+'</div><div class="rec-desc">'+r.desc+'</div><span class="rec-tag '+r.tag+'">'+r.tagText+'</span></div></div>').join('');
 }
 
-/* ====== WEEKLY COMPARE ====== */
+// ─── WEEK COMPARE ─────────────────────────────────────────────────────────────
 function buildWeekCompare(data){
-  if(data.length<2) return '<p style="color:var(--muted);font-size:.85rem;">Faça mais check-ins para ver o comparativo semanal.</p>';
+  if(data.length<2)return'<p style="color:var(--muted);font-size:.85rem;font-style:italic;">Realize mais check-ins para ver o comparativo semanal.</p>';
   const thisWeek=data.slice(-7);
   const lastWeek=data.length>=14?data.slice(-14,-7):data.slice(0,Math.max(1,data.length-7));
-  function avg(arr,key){ return arr.length?Math.round(arr.reduce((s,d)=>s+d.r[key],0)/arr.length):0; }
+  function avg(arr,key){return arr.length?Math.round(arr.reduce((s,d)=>s+d.r[key],0)/arr.length):0;}
   const metrics=[
-    {key:'energia',label:'Energia média',color:'var(--accent)'},
+    {key:'energia',label:'Energia média',color:'var(--green)'},
     {key:'burnout',label:'Burnout médio',color:'var(--danger)'},
-    {key:'bemestar',label:'Bem-estar médio',color:'var(--purple)'},
-    {key:'produtividade',label:'Produtividade',color:'var(--teal)'},
+    {key:'bemestar',label:'Bem-estar médio',color:'var(--gold)'},
+    {key:'produtividade',label:'Produtividade',color:'var(--green-mid)'},
   ];
   return metrics.map(m=>{
-    const tw=avg(thisWeek,m.key), lw=avg(lastWeek,m.key);
+    const tw=avg(thisWeek,m.key),lw=avg(lastWeek,m.key);
     const diff=tw-lw;
-    const deltaHtml=diff>0?'<span class="delta-up">+'+diff+' vs semana passada</span>':diff<0?'<span class="delta-down">'+diff+' vs semana passada</span>':'<span class="delta-same">Igual à semana passada</span>';
-    return '<div class="week-card"><div class="week-label">'+m.label+'</div><div class="week-val" style="color:'+m.color+'">'+tw+'</div><div class="week-delta">'+deltaHtml+'</div></div>';
+    const deltaHtml=diff>0?'<span class="delta-up">+'+diff+' vs semana anterior</span>':diff<0?'<span class="delta-down">'+diff+' vs semana anterior</span>':'<span class="delta-same">Igual à semana anterior</span>';
+    return'<div class="week-card"><div class="week-label">'+m.label+'</div><div class="week-val" style="color:'+m.color+'">'+tw+'</div><div class="week-delta">'+deltaHtml+'</div></div>';
   }).join('');
 }
 
-/* ====== AI CHAT ====== */
+// ─── AI CHAT ──────────────────────────────────────────────────────────────────
 async function initAIChat(data){
-  const last=data[data.length-1];
-  const r=last.r;
-  const systemPrompt='Você é um assistente de saúde mental amigável e empático chamado NeuroPace. O usuário acabou de fazer um check-in diário e seus resultados são: Energia='+r.energia+'/100, Burnout='+r.burnout+'/100, Bem-estar='+r.bemestar+'/100, Produtividade='+r.produtividade+'/100. Respostas detalhadas: '+JSON.stringify(last.answers)+'. Responda sempre em português, de forma acolhedora, sem jargões técnicos. Seja direto, prático e humano. Não finja ser médico — você dá apoio emocional e dicas de hábitos. Limite suas respostas a 3-4 parágrafos.';
-  aiHistory=[{role:'user',content:'Oi! Acabei de fazer meu check-in.'}];
+  const last=data[data.length-1];const r=last.r;
+  const systemPrompt='Você é um assistente de saúde mental refinado e empático chamado NeuroPace. O usuário acabou de fazer um check-in diário completo de 50 questões. Resultados: Energia='+r.energia+'/100, Burnout='+r.burnout+'/100, Bem-estar='+r.bemestar+'/100, Produtividade='+r.produtividade+'/100. Respostas detalhadas: '+JSON.stringify(last.answers)+'. Responda sempre em português, com linguagem serena, elegante e acolhedora, sem jargões. Seja direto, prático e humano. Não finja ser médico. Limite-se a 3 parágrafos.';
+  aiHistory=[{role:'user',content:'Olá. Acabei de fazer o meu check-in completo.'}];
   const msgs=document.getElementById('aiMessages');
   msgs.innerHTML='';
   const msg=document.createElement('div');
-  msg.className='ai-msg ai loading'; msg.textContent='Analisando seu check-in...';
+  msg.className='ai-msg ai loading';msg.textContent='Analisando o seu check-in...';
   msgs.appendChild(msg);
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:systemPrompt,messages:aiHistory})
     });
     const d=await resp.json();
     const text=d.content.map(c=>c.text||'').join('');
-    msg.className='ai-msg ai'; msg.textContent=text;
+    msg.className='ai-msg ai';msg.textContent=text;
     aiHistory.push({role:'assistant',content:text});
-  } catch(e){ msg.textContent='Não consegui carregar a IA agora. Tente novamente.'; }
+  }catch(e){msg.textContent='Não foi possível carregar a IA agora. Tente novamente.';}
 }
 
 async function sendAI(){
   const input=document.getElementById('aiInput');
-  const text=input.value.trim(); if(!text) return;
+  const text=input.value.trim();if(!text)return;
   const msgs=document.getElementById('aiMessages');
-  const userMsg=document.createElement('div'); userMsg.className='ai-msg user'; userMsg.textContent=text; msgs.appendChild(userMsg);
-  input.value=''; msgs.scrollTop=msgs.scrollHeight;
+  const userMsg=document.createElement('div');userMsg.className='ai-msg user';userMsg.textContent=text;msgs.appendChild(userMsg);
+  input.value='';msgs.scrollTop=msgs.scrollHeight;
   aiHistory.push({role:'user',content:text});
-  const loadMsg=document.createElement('div'); loadMsg.className='ai-msg ai loading'; loadMsg.textContent='Pensando...'; msgs.appendChild(loadMsg);
-  const last=lastDashData[lastDashData.length-1];
-  const r=last.r;
-  const systemPrompt='Você é o NeuroPace, assistente de saúde mental empático. Contexto do usuário hoje: Energia='+r.energia+', Burnout='+r.burnout+', Bem-estar='+r.bemestar+', Produtividade='+r.produtividade+'. Responda sempre em português, de forma acolhedora, prática e sem jargões. Máximo 3 parágrafos.';
+  const loadMsg=document.createElement('div');loadMsg.className='ai-msg ai loading';loadMsg.textContent='A refletir...';msgs.appendChild(loadMsg);
+  const last=lastDashData[lastDashData.length-1];const r=last.r;
+  const systemPrompt='Você é o NeuroPace, assistente de saúde mental refinado. Contexto: Energia='+r.energia+', Burnout='+r.burnout+', Bem-estar='+r.bemestar+', Produtividade='+r.produtividade+'. Responda em português, de forma serena e empática. Máximo 3 parágrafos.';
   try{
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST', headers:{'Content-Type':'application/json'},
+      method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:800,system:systemPrompt,messages:aiHistory})
     });
     const d=await resp.json();
     const reply=d.content.map(c=>c.text||'').join('');
-    loadMsg.className='ai-msg ai'; loadMsg.textContent=reply;
+    loadMsg.className='ai-msg ai';loadMsg.textContent=reply;
     aiHistory.push({role:'assistant',content:reply});
-  } catch(e){ loadMsg.textContent='Erro de conexão. Tente novamente.'; }
+  }catch(e){loadMsg.textContent='Erro de conexão. Tente novamente.';}
   msgs.scrollTop=msgs.scrollHeight;
 }
 
-/* ====== DASH TABS ====== */
-function switchTab(name,e){
+// ─── TABS & CHARTS ────────────────────────────────────────────────────────────
+function switchTab(btn,name){
   document.querySelectorAll('.dtab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.dash-panel').forEach(p=>p.classList.remove('active'));
-  if(e&&e.target) e.target.classList.add('active');
+  btn.classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
 }
-
-/* ====== CHART TABS ====== */
-let currentChartMode='all';
-function switchChart(mode,e){
-  currentChartMode=mode;
+function switchChart(btn,mode){
   document.querySelectorAll('.ctab').forEach(t=>t.classList.remove('active'));
-  if(e&&e.target) e.target.classList.add('active');
+  btn.classList.add('active');
   renderLineChart(allData,mode);
 }
 
 function renderLineChart(data,mode){
-  if(lineChartInst) lineChartInst.destroy();
+  if(lineChartInst)lineChartInst.destroy();
   const ctx=document.getElementById('lineChart').getContext('2d');
   const labels=data.map((d,i)=>d.date||'Dia '+(i+1));
   const allDS=[
-    {label:'Energia',data:data.map(d=>d.r.energia),borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,.07)',tension:.4,fill:true,pointRadius:3},
-    {label:'Burnout',data:data.map(d=>d.r.burnout),borderColor:'#f43f5e',backgroundColor:'rgba(244,63,94,.07)',tension:.4,fill:true,pointRadius:3},
-    {label:'Bem-estar',data:data.map(d=>d.r.bemestar),borderColor:'#a78bfa',backgroundColor:'rgba(167,139,250,.07)',tension:.4,fill:true,pointRadius:3},
-    {label:'Produtividade',data:data.map(d=>d.r.produtividade),borderColor:'#34d399',backgroundColor:'rgba(52,211,153,.07)',tension:.4,fill:true,pointRadius:3},
+    {label:'Energia',data:data.map(d=>d.r.energia),borderColor:'#2d4a3e',backgroundColor:'rgba(45,74,62,.06)',tension:.4,fill:true,pointRadius:3,borderWidth:1.5},
+    {label:'Burnout',data:data.map(d=>d.r.burnout),borderColor:'#7a2828',backgroundColor:'rgba(122,40,40,.06)',tension:.4,fill:true,pointRadius:3,borderWidth:1.5},
+    {label:'Bem-estar',data:data.map(d=>d.r.bemestar),borderColor:'#9a7d4a',backgroundColor:'rgba(154,125,74,.06)',tension:.4,fill:true,pointRadius:3,borderWidth:1.5},
+    {label:'Produtividade',data:data.map(d=>d.r.produtividade),borderColor:'#3d6456',backgroundColor:'rgba(61,100,86,.06)',tension:.4,fill:true,pointRadius:3,borderWidth:1.5},
   ];
   const keyMap={all:allDS,energia:[allDS[0]],burnout:[allDS[1]],bemestar:[allDS[2]],produtividade:[allDS[3]]};
   lineChartInst=new Chart(ctx,{
     type:'line',data:{labels,datasets:keyMap[mode]||allDS},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#b0bac8',font:{family:'DM Sans'},boxWidth:12}}},scales:{x:{ticks:{color:'#6b7a90',font:{size:10}},grid:{color:'#2a3240'}},y:{ticks:{color:'#6b7a90'},grid:{color:'#2a3240'},max:100,min:0}}}
+    options:{responsive:true,plugins:{legend:{labels:{color:'#8a7d6a',font:{family:'EB Garamond',size:13},boxWidth:10}}},scales:{x:{ticks:{color:'#8a7d6a',font:{family:'EB Garamond',size:11}},grid:{color:'rgba(201,191,168,.2)'}},y:{ticks:{color:'#8a7d6a',font:{family:'EB Garamond',size:11}},grid:{color:'rgba(201,191,168,.2)'},max:100,min:0}}}
   });
 }
 
-/* ====== TOPIC DEFS (expanded) ====== */
+// ─── TOPIC DEFS ───────────────────────────────────────────────────────────────
 const topicDefs={
-  sono:{label:'Como você dormiu',icon:'😴',max:10,desc:v=>v<=3?'Sono muito ruim. É o fator que mais impacta todos os outros indicadores.':v<=6?'Sono razoável. Melhorar a rotina noturna faria grande diferença.':'Ótimo sono! Base de toda saúde mental e desempenho.'},
-  horas_sono:{label:'Horas dormidas',icon:'🕐',max:10,desc:v=>v<=3?'Menos de 5h é insuficiente. O déficit acumula ao longo da semana.':v<=6?'5 a 6h — abaixo do ideal para a maioria dos adultos.':'Duração adequada! 7 a 8h é o recomendado.'},
-  acorda_noite:{label:'Acordou de madrugada',icon:'🌙',max:10,desc:v=>v<=3?'Acordar muitas vezes fragmenta o sono e impede a recuperação profunda.':v<=6?'Acordou algumas vezes — pode ser estresse ou ansiedade.':'Ótimo! Dormiu sem interrupções significativas.'},
-  celular_antes_dormir:{label:'Celular antes de dormir',icon:'📱',max:10,desc:v=>v<=3?'A luz da tela suprime a melatonina e dificulta o sono. Tente parar 30 min antes.':v<=6?'Um pouco de tela — tente reduzir aos poucos.':'Ótimo! Sem tela antes de dormir melhora muito a qualidade do sono.'},
-  ansiedade_noturna:{label:'Ansiedade antes de dormir',icon:'😰',max:10,desc:v=>v<=3?'Alta ansiedade noturna — tente respiração profunda ou escrever o que está te preocupando.':v<=6?'Alguma ansiedade — normal, mas vale trabalhar.':'Boa tranquilidade ao dormir.'},
-  acordou_descansado:{label:'Acordou descansado',icon:'🌅',max:10,desc:v=>v<=3?'Acordar exausto indica sono não restaurador.':v<=6?'Ainda cansado ao acordar — sono pode precisar de mais qualidade.':'Ótima energia matinal! Sinal de sono de qualidade.'},
-  energia_manha:{label:'Energia pela manhã',icon:'☀️',max:10,desc:v=>v<=3?'Energia muito baixa de manhã. Verifique qualidade do sono.':v<=6?'Energia moderada ao acordar.':'Excelente energia matinal!'},
-  exercicio:{label:'Atividade física',icon:'🏃',max:10,desc:v=>v<=2?'Sem movimento hoje. Exercício libera hormônios do bem-estar.':v<=6?'Pouco movimento. Qualquer atividade já é benéfica.':'Ótimo! Exercício regular reduz ansiedade e melhora sono.'},
-  alimentacao:{label:'Alimentação',icon:'🥗',max:10,desc:v=>v<=3?'Alimentação ruim impacta energia, humor e concentração.':v<=6?'Alimentação razoável.':'Muito bem! Boa nutrição é combustível para o cérebro.'},
-  hidratacao:{label:'Hidratação',icon:'💧',max:10,desc:v=>v<=3?'Desidratação causa fadiga e reduz concentração.':v<=6?'Hidratação abaixo do ideal.':'Excelente hidratação!'},
-  dor_fisica:{label:'Dor ou desconforto físico',icon:'🩹',max:10,desc:v=>v<=3?'Dor física intensa — preste atenção no seu corpo e descanse.':v<=6?'Algum desconforto — pode ser postura, tensão ou estresse.':'Corpo confortável hoje!'},
-  respiracao:{label:'Respiração',icon:'🌬️',max:10,desc:v=>v<=3?'Respiração curta ou aperto no peito são sinais de ansiedade. Tente respirar fundo devagar.':v<=6?'Alguns momentos de respiração tensa.':'Respiração tranquila o dia todo — ótimo sinal!'},
-  tensao_corporal:{label:'Tensão no corpo',icon:'💪',max:10,desc:v=>v<=3?'Corpo muito tenso. Alongamento ou massagem pode ajudar muito.':v<=6?'Alguma tensão — comum em dias puxados.':'Corpo relaxado e solto!'},
-  carga:{label:'Carga mental',icon:'🧩',max:12,desc:v=>v<=5?'Dia tranquilo. Você tem espaço mental disponível.':v<=9?'Carga moderada.':'Sobrecarga cognitiva. Pausas são urgentes.'},
-  foco:{label:'Concentração',icon:'🎯',max:10,desc:v=>v<=3?'Foco muito baixo. Verifique sono e hidratação.':v<=6?'Concentração moderada.':'Foco excelente!'},
-  produtividade:{label:'O que conseguiu fazer',icon:'✅',max:10,desc:v=>v<=3?'Dia pouco produtivo.':v<=6?'Produtividade parcial.':'Alta produtividade!'},
-  memoria:{label:'Memória',icon:'🧠',max:10,desc:v=>v<=3?'Memória comprometida — pode ser falta de sono ou sobrecarga.':v<=6?'Alguns esquecimentos — comum em dias agitados.':'Memória funcionando bem!'},
-  decisao:{label:'Capacidade de decidir',icon:'🔀',max:10,desc:v=>v<=3?'Dificuldade de decidir — sinal de sobrecarga mental ou cansaço.':v<=6?'Alguma indecisão — tudo bem, acontece.':'Decisões fluindo bem hoje!'},
-  completar_tarefas:{label:'Concluir o que começou',icon:'☑️',max:10,desc:v=>v<=3?'Dificuldade de concluir — pode ser distração ou falta de energia.':v<=6?'Terminou algumas coisas.':'Ótima capacidade de conclusão!'},
-  criatividade:{label:'Criatividade',icon:'💡',max:10,desc:v=>v<=3?'Pouca criatividade hoje — normal em dias de esgotamento.':v<=6?'Alguma criatividade.':'Você foi criativo e inovador hoje!'},
-  estresse:{label:'Estresse e pressão',icon:'⚡',max:10,desc:v=>v<=3?'Nível saudável. Dia tranquilo.':v<=6?'Estresse moderado.':'Estresse elevado. Cortisol alto afeta memória e imunidade.'},
-  ansiedade:{label:'Ansiedade',icon:'🌀',max:10,desc:v=>v<=3?'Ansiedade controlada. Em equilíbrio emocional.':v<=6?'Ansiedade moderada.':'Ansiedade alta. Considere técnicas de respiração.'},
-  humor:{label:'Humor geral',icon:'😊',max:10,desc:v=>v<=3?'Humor muito baixo. Pode ser sinal de esgotamento.':v<=6?'Humor neutro.':'Humor positivo! Indicador de bem-estar.'},
-  irritabilidade:{label:'Irritabilidade',icon:'😤',max:10,desc:v=>v<=3?'Alta irritabilidade — geralmente sinal de cansaço ou sobrecarga.':v<=6?'Alguma impaciência.':'Ótimo equilíbrio emocional.'},
-  tristeza:{label:'Tristeza',icon:'😞',max:10,desc:v=>v<=3?'Tristeza intensa — se isso se repete, vale conversar com alguém.':v<=6?'Um pouco de tristeza — faz parte da vida.':'Sem tristeza hoje!'},
-  sobrecarga:{label:'Sensação de sobrecarga',icon:'🏋️',max:10,desc:v=>v<=3?'Sobrecarga constante — urgente reduzir o que for possível.':v<=6?'Alguma sobrecarga.':'Sem sensação de sobrecarga!'},
-  medo:{label:'Medo ou insegurança',icon:'😟',max:10,desc:v=>v<=3?'Alto medo ou insegurança — vale identificar o que está causando isso.':v<=6?'Algum medo.':'Sem medo ou insegurança hoje!'},
-  alegria:{label:'Momentos de alegria',icon:'😄',max:10,desc:v=>v<=3?'Pouca alegria hoje — tente criar ao menos um momento prazeroso amanhã.':v<=6?'Alguns momentos bons.':'Muito prazer e alegria hoje!'},
-  tela:{label:'Tempo de tela',icon:'📱',max:10,desc:v=>v<=3?'Ótimo equilíbrio digital.':v<=6?'Tela moderada.':'Muitas horas de tela prejudicam sono e concentração.'},
-  fadiga:{label:'Cansaço de telas',icon:'🥴',max:10,desc:v=>v<=3?'Baixa fadiga digital.':v<=6?'Fadiga moderada.':'Fadiga digital alta. Faz bem descansar dos dispositivos.'},
-  pausas:{label:'Pausas ao longo do dia',icon:'☕',max:10,desc:v=>v<=2?'Sem pausas. Nosso cérebro precisa de intervalos.':v<=6?'Poucas pausas.':'Excelente! Pausas melhoram foco e criatividade.'},
-  scroll_sem_foco:{label:'Scroll sem propósito',icon:'📲',max:10,desc:v=>v<=3?'Muito scroll sem foco — drena energia e aumenta ansiedade.':v<=6?'Algum scroll compulsivo.':'Uso consciente do celular!'},
-  comparacao_social:{label:'Comparação com os outros',icon:'👁️',max:10,desc:v=>v<=3?'Muita comparação — redes sociais mostram apenas os melhores momentos das pessoas.':v<=6?'Alguma comparação.':'Você se manteve focado em você mesmo!'},
-  social:{label:'Contato com pessoas',icon:'🤝',max:10,desc:v=>v<=3?'Muito isolado. Conexão social é essencial para o bem-estar.':v<=6?'Pouco contato social.':'Ótimas conexões!'},
-  pertencimento:{label:'Sentir-se aceito',icon:'🫂',max:10,desc:v=>v<=3?'Sentir-se excluído é muito doloroso. Tente se conectar com alguém de confiança.':v<=6?'Algum pertencimento.':'Você se sentiu aceito e entendido!'},
-  conflito:{label:'Conflitos com pessoas',icon:'⚡',max:10,desc:v=>v<=3?'Conflito significativo — tente resolver com calma e diálogo quando possível.':v<=6?'Alguma tensão interpessoal.':'Sem conflitos hoje!'},
-  ajudar:{label:'Ajudou alguém',icon:'🤲',max:10,desc:v=>v<=3?'Sem ajudar ninguém — mas tudo bem, às vezes precisamos focar em nós mesmos.':v<=6?'Ajudou um pouco.':'Você contribuiu positivamente para alguém hoje!'},
-  solidao:{label:'Solidão',icon:'🏝️',max:10,desc:v=>v<=3?'Solidão intensa — mesmo rodeado de pessoas isso pode acontecer. Busque conexão real.':v<=6?'Um pouco de solidão.':'Sem solidão hoje!'},
-  motivacao:{label:'Motivação',icon:'🔥',max:10,desc:v=>v<=3?'Motivação muito baixa.':v<=6?'Animação moderada.':'Alta motivação! Senso de propósito protege contra burnout.'},
-  sentido:{label:'Senso de propósito',icon:'🌟',max:10,desc:v=>v<=3?'Falta de sentido pode ser sinal de esgotamento ou desconexão com seus valores.':v<=6?'Algum propósito.':'Você sentiu que o dia valeu a pena!'},
-  curiosidade:{label:'Curiosidade',icon:'🔍',max:10,desc:v=>v<=3?'Pouca curiosidade — comum em dias de esgotamento ou tristeza.':v<=6?'Algum interesse.':'Alta curiosidade e engajamento!'},
-  orgulho:{label:'Orgulho do seu dia',icon:'🏆',max:10,desc:v=>v<=3?'Nada para se orgulhar hoje — mas amanhã é um novo dia.':v<=6?'Um pequeno orgulho.':'Você tem motivos para se orgulhar hoje!'},
-  preocupacao_futuro:{label:'Preocupação com futuro',icon:'⏳',max:10,desc:v=>v<=3?'Muito foco no futuro — tente trazer sua atenção para o presente.':v<=6?'Alguma preocupação.':'Você esteve presente hoje!'},
-  autocuidado:{label:'Autocuidado',icon:'🌿',max:10,desc:v=>v<=3?'Pouco autocuidado.':v<=6?'Algum autocuidado.':'Ótimo autocuidado! Investir em si aumenta resiliência.'},
-  lazer:{label:'Lazer e prazer',icon:'🎮',max:10,desc:v=>v<=3?'Sem lazer — é importante ter momentos só para você.':v<=6?'Pouco lazer.':'Ótimo tempo de lazer!'},
-  controle_rotina:{label:'Controle da rotina',icon:'📋',max:10,desc:v=>v<=3?'Rotina fora de controle — tente definir 3 prioridades para amanhã.':v<=6?'Algum controle.':'Você dominou sua rotina hoje!'},
-  natureza:{label:'Tempo ao ar livre',icon:'🌳',max:10,desc:v=>v<=3?'Sem tempo ao ar livre — mesmo 10 minutos de sol fazem diferença.':v<=6?'Pouco ar livre.':'Ótimo contato com a natureza!'},
-  relaxamento:{label:'Relaxamento',icon:'🧘',max:10,desc:v=>v<=3?'Sem momentos de relaxamento — o cérebro precisa descansar.':v<=6?'Algum relaxamento.':'Ótimo! Você cuidou da sua mente hoje.'},
-  autocompaixao:{label:'Gentileza consigo mesmo',icon:'💛',max:10,desc:v=>v<=3?'Muito duro consigo mesmo — você merece o mesmo cuidado que daria a um amigo.':v<=6?'Alguma autocompaixão.':'Você foi gentil e compassivo consigo hoje!'},
-  energia:{label:'Energia no final do dia',icon:'⚡',max:10,desc:v=>v<=3?'Energia esgotada. Priorize descanso.':v<=6?'Energia moderada.':'Boa energia no fim do dia!'},
+  sono:{label:'Qualidade do sono',max:10,desc:v=>v<=3?'Sono muito comprometido. É o fator que mais impacta todos os outros indicadores.':v<=6?'Sono razoável. Melhorar a rotina noturna faria grande diferença.':'Ótimo sono. A base de toda saúde mental e desempenho.'},
+  horas_sono:{label:'Duração do sono',max:10,desc:v=>v<=3?'Menos de 5h é insuficiente para a maioria dos adultos.':v<=6?'Entre 5 e 6 horas — abaixo do ideal.':'Duração adequada. 7 a 8 horas é o recomendado.'},
+  qualidade_sono:{label:'Continuidade do sono',max:10,desc:v=>v<=3?'Sono fragmentado prejudica todas as fases de recuperação.':v<=6?'Algumas interrupções.':'Dormiu sem grandes interrupções.'},
+  tela_sono:{label:'Telas antes de dormir',max:10,desc:v=>v<=3?'Muita exposição à luz azul antes de dormir. Melatonina comprometida.':v<=6?'Algum uso de telas antes de dormir.':'Boa higiene digital noturna.'},
+  sonhos:{label:'Qualidade dos sonhos',max:10,desc:v=>v<=3?'Sonhos agitados indicam processamento emocional intenso ou sono ruim.':v<=6?'Sonhos normais.':'Sono tranquilo e restaurador.'},
+  horario_sono:{label:'Horário de dormir',max:10,desc:v=>v<=3?'Dormir muito tarde prejudica o ciclo circadiano.':v<=6?'Horário um pouco tardio.':'Bom horário para dormir. Ciclo circadiano alinhado.'},
+  energia_manha:{label:'Energia ao acordar',max:10,desc:v=>v<=3?'Acordar exausto indica sono não restaurador.':v<=6?'Energia moderada ao acordar.':'Excelente energia matinal.'},
+  exercicio:{label:'Atividade física',max:10,desc:v=>v<=2?'Sem movimento hoje. O exercício libera hormônios do bem-estar.':v<=6?'Pouco movimento. Qualquer atividade é benéfica.':'Muito bem. O exercício regular reduz ansiedade e melhora o sono.'},
+  alimentacao:{label:'Alimentação',max:10,desc:v=>v<=3?'Alimentação comprometida impacta energia, humor e concentração.':v<=6?'Alimentação razoável.':'Muito bem. Boa nutrição é combustível para o cérebro.'},
+  hidratacao:{label:'Hidratação',max:10,desc:v=>v<=3?'Desidratação causa fadiga e reduz a concentração.':v<=6?'Hidratação abaixo do ideal.':'Excelente hidratação.'},
+  dor_fisica:{label:'Bem-estar físico',max:10,desc:v=>v<=3?'Dor ou desconforto físico intenso. Afeta humor e produtividade.':v<=6?'Algum desconforto físico.':'Fisicamente bem hoje.'},
+  tensao:{label:'Tensão corporal',max:10,desc:v=>v<=3?'Tensão muscular alta — sinal frequente de estresse crônico.':v<=6?'Tensão moderada.':'Corpo relaxado e confortável.'},
+  sintomas_stress:{label:'Sintomas físicos de estresse',max:10,desc:v=>v<=3?'Sintomas físicos intensos de estresse. Atenção ao sistema nervoso.':v<=6?'Alguns sintomas físicos.':'Sem sintomas físicos de estresse.'},
+  respiracao:{label:'Qualidade da respiração',max:10,desc:v=>v<=3?'Respiração curta e superficial — sinal de tensão constante.':v<=6?'Respiração parcialmente comprometida.':'Respiração profunda e tranquila.'},
+  carga:{label:'Carga mental',max:12,desc:v=>v<=5?'Dia tranquilo. Há espaço mental disponível.':v<=9?'Carga moderada.':'Sobrecarga cognitiva. Pausas são essenciais.'},
+  foco:{label:'Concentração',max:10,desc:v=>v<=3?'Foco muito baixo. Verifique sono e hidratação.':v<=6?'Concentração moderada.':'Foco excelente.'},
+  produtividade:{label:'O que foi realizado',max:10,desc:v=>v<=3?'Dia pouco produtivo.':v<=6?'Produtividade parcial.':'Alta produtividade.'},
+  decisoes:{label:'Tomada de decisões',max:10,desc:v=>v<=3?'Muitas decisões pesadas hoje. Fadiga decisional pode aumentar.':v<=6?'Algumas decisões difíceis.':'Dia com poucas decisões pesadas. Menor fadiga mental.'},
+  conclusao:{label:'Conclusão de tarefas',max:10,desc:v=>v<=3?'Poucas tarefas concluídas.':v<=6?'Conclusão parcial.':'Alta taxa de conclusão de tarefas.'},
+  ruminacao:{label:'Ruminação mental',max:10,desc:v=>v<=3?'Pensamentos repetitivos intensos. Pode impactar o sono e o humor.':v<=6?'Alguma ruminação.':'Mente tranquila, sem pensamentos repetitivos.'},
+  presenca:{label:'Presença mental',max:10,desc:v=>v<=3?'Muito disperso hoje. Mente em lugares diferentes do corpo.':v<=6?'Presença moderada.':'Totalmente presente e engajado.'},
+  memoria:{label:'Memória e clareza mental',max:10,desc:v=>v<=3?'Vários esquecimentos. Pode indicar fadiga ou sono ruim.':v<=6?'Alguns lapsos de memória.':'Mente afiada e clara.'},
+  estresse:{label:'Estresse e pressão',max:10,desc:v=>v<=3?'Nível saudável. Dia tranquilo.':v<=6?'Estresse moderado.':'Estresse elevado. O cortisol alto afeta a memória e a imunidade.'},
+  ansiedade:{label:'Preocupação e ansiedade',max:10,desc:v=>v<=3?'Ansiedade controlada. Em equilíbrio emocional.':v<=6?'Ansiedade moderada.':'Ansiedade elevada. Considere técnicas de respiração.'},
+  humor:{label:'Humor geral',max:10,desc:v=>v<=3?'Humor muito baixo. Pode ser sinal de esgotamento.':v<=6?'Humor neutro.':'Humor positivo. Indicador de bem-estar.'},
+  irritabilidade:{label:'Irritabilidade',max:10,desc:v=>v<=3?'Alta irritabilidade — geralmente sinal de cansaço ou sobrecarga.':v<=6?'Alguma impaciência.':'Ótimo equilíbrio emocional.'},
+  alegria:{label:'Alegria e positividade',max:10,desc:v=>v<=3?'Poucas ou nenhuma emoção positiva hoje.':v<=6?'Alguns momentos positivos.':'Muitos momentos de alegria genuína.'},
+  sobrecarga_emocional:{label:'Sobrecarga emocional',max:10,desc:v=>v<=3?'Emocionalmente no limite. Priorize cuidado pessoal.':v<=6?'Carga emocional considerável.':'Emocional mente equilibrado.'},
+  medo:{label:'Medos e inseguranças',max:10,desc:v=>v<=3?'Medos intensos afetaram o dia.':v<=6?'Alguma ansiedade e insegurança.':'Sem medos significativos hoje.'},
+  culpa:{label:'Autocrítica e culpa',max:10,desc:v=>v<=3?'Muita autocrítica hoje. Tente ser mais gentil consigo mesmo.':v<=6?'Alguma autocrítica.':'Boa relação consigo mesmo hoje.'},
+  tela:{label:'Tempo de tela',max:10,desc:v=>v<=3?'Excelente equilíbrio digital.':v<=6?'Uso moderado de telas.':'Muitas horas de tela prejudicam o sono e a concentração.'},
+  fadiga:{label:'Fadiga digital',max:10,desc:v=>v<=3?'Baixa fadiga digital.':v<=6?'Fadiga moderada.':'Fadiga digital elevada. Vale descansar dos dispositivos.'},
+  pausas:{label:'Pausas ao longo do dia',max:10,desc:v=>v<=2?'Sem pausas. O cérebro precisa de intervalos para funcionar bem.':v<=6?'Poucas pausas.':'Excelente. As pausas melhoram o foco e a criatividade.'},
+  celular:{label:'Uso consciente do celular',max:10,desc:v=>v<=3?'Uso compulsivo do celular. Drena energia e atenção.':v<=6?'Uso um pouco compulsivo.':'Uso consciente e intencional do celular.'},
+  lazer_sem_tela:{label:'Lazer offline',max:10,desc:v=>v<=3?'Sem tempo offline. O cérebro precisa de estímulos não digitais.':v<=6?'Pouco lazer sem telas.':'Bom equilíbrio entre digital e offline.'},
+  social:{label:'Conexão com pessoas',max:10,desc:v=>v<=3?'Muito isolado. A conexão social é essencial para o bem-estar.':v<=6?'Pouco contato social.':'Ótimas conexões. Vínculos saudáveis protegem a saúde mental.'},
+  sentir_ouvido:{label:'Sentir-se compreendido',max:10,desc:v=>v<=3?'Sentiu-se ignorado ou incompreendido.':v<=6?'Pouca validação emocional.':'Sentiu-se ouvido e compreendido.'},
+  conflito:{label:'Conflitos e tensão social',max:10,desc:v=>v<=3?'Conflito significativo hoje. Pode aumentar o estresse.':v<=6?'Alguma tensão nas relações.':'Relações tranquilas hoje.'},
+  amor:{label:'Amor e apoio recebido',max:10,desc:v=>v<=3?'Sentiu-se muito sozinho hoje.':v<=6?'Pouco apoio emocional.':'Sentiu-se amado e apoiado.'},
+  contribuicao:{label:'Contribuição positiva',max:10,desc:v=>v<=3?'Pouca interação social hoje.':v<=6?'Interações neutras.':'Contribuiu positivamente na vida de alguém.'},
+  motivacao:{label:'Ânimo e motivação',max:10,desc:v=>v<=3?'Motivação muito baixa.':v<=6?'Animação moderada.':'Alta motivação. O senso de propósito protege contra o burnout.'},
+  satisfacao:{label:'Satisfação e prazer',max:10,desc:v=>v<=3?'Nenhuma atividade satisfatória hoje.':v<=6?'Pouca satisfação.':'Fez algo que traz satisfação genuína.'},
+  proposito:{label:'Senso de propósito',max:10,desc:v=>v<=3?'Dia sem sentido ou direção.':v<=6?'Algum propósito.':'Dia cheio de significado e direção.'},
+  procrastinacao:{label:'Procrastinação',max:10,desc:v=>v<=3?'Muita procrastinação hoje.':v<=6?'Alguma procrastinação.':'Muito direto e focado nas tarefas.'},
+  avanco:{label:'Avanço em objetivos',max:10,desc:v=>v<=3?'Sem progresso em metas pessoais.':v<=6?'Pouco avanço.':'Avanço significativo em direção aos objetivos.'},
+  autocuidado:{label:'Autocuidado',max:10,desc:v=>v<=3?'Pouco autocuidado.':v<=6?'Algum autocuidado.':'Ótimo autocuidado. Investir em si mesmo aumenta a resiliência.'},
+  expressao:{label:'Expressão emocional',max:10,desc:v=>v<=3?'Reprimiu sentimentos. Isso aumenta a tensão interna.':v<=6?'Pouca expressão emocional.':'Expressou bem seus sentimentos.'},
+  tempo_proprio:{label:'Tempo consigo mesmo',max:10,desc:v=>v<=3?'Sem momentos de recolhimento restaurador.':v<=6?'Pouco tempo de qualidade consigo.':'Bom tempo de qualidade consigo mesmo.'},
+  gratidao:{label:'Gratidão e positividade',max:10,desc:v=>v<=3?'Mentalidade muito negativa hoje.':v<=6?'Alguma gratidão.':'Muito grato e com mentalidade positiva.'},
+  energia:{label:'Energia no final do dia',max:10,desc:v=>v<=3?'Energia esgotada. Priorize descanso.':v<=6?'Energia moderada.':'Boa energia ao final do dia.'},
 };
 
-function levelClass(v,max){ const p=v/max; return p<=.4?'low':p<=.7?'mid':'high'; }
+function levelClass(v,max){const p=v/max;return p<=.4?'low':p<=.7?'mid':'high';}
 
 function statusInfo(energia,burnout,bemestar){
-  if(energia>=70&&burnout<=35&&bemestar>=70) return {cls:'sb-ok',icon:'🌟',msg:'Dia excelente! Energia alta, burnout baixo e bem-estar elevado.'};
-  if(energia>=70&&burnout<=40) return {cls:'sb-ok',icon:'✅',msg:'Você está bem hoje! Energia alta e risco de burnout baixo.'};
-  if(burnout>=75) return {cls:'sb-bad',icon:'🚨',msg:'Sinal crítico: burnout muito alto. Priorize descanso e evite novas demandas.'};
-  if(burnout>=60) return {cls:'sb-bad',icon:'⚠️',msg:'Burnout elevado. Reduza a carga, aumente pausas e cuide do sono.'};
-  if(energia<=30) return {cls:'sb-bad',icon:'🪫',msg:'Energia crítica. Evite decisões importantes e priorize descanso.'};
-  if(bemestar<=35) return {cls:'sb-warn',icon:'💛',msg:'Bem-estar emocional baixo. Tente se conectar com alguém ou fazer algo prazeroso.'};
-  return {cls:'sb-warn',icon:'⚠️',msg:'Dia moderado. Veja a análise detalhada para entender onde focar.'};
+  if(energia>=70&&burnout<=35&&bemestar>=70)return{cls:'sb-ok',icon:'✦',msg:'Um dia excelente. Energia alta, burnout baixo e bem-estar elevado.'};
+  if(energia>=70&&burnout<=40)return{cls:'sb-ok',icon:'✦',msg:'Você está bem hoje. Energia alta e risco de burnout baixo.'};
+  if(burnout>=75)return{cls:'sb-bad',icon:'—',msg:'Burnout muito elevado. Priorize descanso e evite novas demandas.'};
+  if(burnout>=60)return{cls:'sb-bad',icon:'—',msg:'Burnout elevado. Reduza a carga, aumente as pausas e cuide do sono.'};
+  if(energia<=30)return{cls:'sb-bad',icon:'—',msg:'Energia crítica. Evite decisões importantes e priorize o descanso.'};
+  if(bemestar<=35)return{cls:'sb-warn',icon:'—',msg:'Bem-estar emocional baixo. Procure se conectar com alguém ou fazer algo prazeroso.'};
+  return{cls:'sb-warn',icon:'—',msg:'Dia moderado. Consulte a análise detalhada para saber onde focar.'};
 }
 
+// ─── SHOW DASH ────────────────────────────────────────────────────────────────
 function showDash(data){
-  goTo('dashScreen'); allData=data;
-  const last=data[data.length-1]; const r=last.r; const a=last.answers;
+  goTo('dashScreen');allData=data;
+  const last=data[data.length-1];const r=last.r;const a=last.answers;
 
   document.getElementById('trendAlertsDash').innerHTML=buildTrendAlerts(data);
 
   const scores=[
-    {cls:'sc-energy',label:'Energia',val:r.energia,sub:r.energia>=70?'Alto':'Médio'},
-    {cls:'sc-burnout',label:'Burnout',val:r.burnout,sub:r.burnout>=70?'Alto':'Baixo'},
+    {cls:'sc-energy',label:'Energia',val:r.energia,sub:r.energia>=70?'Elevada':'Moderada'},
+    {cls:'sc-burnout',label:'Burnout',val:r.burnout,sub:r.burnout>=70?'Elevado':'Controlado'},
     {cls:'sc-focus',label:'Foco',val:Math.min(100,Math.round((a.foco||0)*10)),sub:''},
     {cls:'sc-stress',label:'Estresse',val:Math.min(100,Math.round((a.estresse||0)*10)),sub:''},
     {cls:'sc-wellbeing',label:'Bem-estar',val:r.bemestar,sub:''},
@@ -988,117 +1139,103 @@ function showDash(data){
 
   const st=statusInfo(r.energia,r.burnout,r.bemestar);
   document.getElementById('statusBadge').className='status-badge '+st.cls+' mb2';
-  document.getElementById('statusBadge').innerHTML='<span class="icon">'+st.icon+'</span><span>'+st.msg+'</span>';
+  document.getElementById('statusBadge').innerHTML='<span style="font-size:.9rem;flex-shrink:0;">'+st.icon+'</span><span>'+st.msg+'</span>';
 
-  document.getElementById('userPill').textContent='👤 '+currentUser;
-
+  document.getElementById('userPill').textContent='&#9670; '+currentUser;
   document.getElementById('recsList').innerHTML=buildRecs(r,a);
   document.getElementById('weekGrid').innerHTML=buildWeekCompare(data);
   if(last.note){
     document.getElementById('dayNoteCard').style.display='block';
     document.getElementById('noteDateLabel').textContent=last.date;
     document.getElementById('noteTextDisplay').textContent=last.note;
-  } else { document.getElementById('dayNoteCard').style.display='none'; }
+  }else{document.getElementById('dayNoteCard').style.display='none';}
 
-  const allKeys=Object.keys(topicDefs);
-  document.getElementById('topicCards').innerHTML=allKeys.filter(k=>a[k]!==undefined).map(k=>{
-    const def=topicDefs[k]; if(!def) return '';
-    const val=a[k]||0; const pct=Math.min(100,Math.round((val/def.max)*100)); const lvl=levelClass(val,def.max);
-    return '<div class="topic-card"><div class="t-header"><span class="t-name">'+def.icon+' '+def.label+'</span><span class="t-val t-'+lvl+'">'+pct+'</span></div><div class="t-bar-bg"><div class="t-bar-fill fill-'+lvl+'" style="width:'+pct+'%"></div></div><div class="t-reason">'+def.desc(val)+'</div></div>';
+  const keys=Object.keys(topicDefs);
+  document.getElementById('topicCards').innerHTML=keys.filter(k=>a[k]!==undefined).map(k=>{
+    const def=topicDefs[k];if(!def)return'';
+    const val=a[k]||0;const pct=Math.min(100,Math.round((val/def.max)*100));const lvl=levelClass(val,def.max);
+    return'<div class="topic-card"><div class="t-header"><span class="t-name">'+def.label+'</span><span class="t-val t-'+lvl+'">'+pct+'</span></div><div class="t-bar-bg"><div class="t-bar-fill fill-'+lvl+'" style="width:'+pct+'%"></div></div><div class="t-reason">'+def.desc(val)+'</div></div>';
   }).join('');
 
   const legendDefs=[
-    {icon:'⚡',title:'Energia',desc:'Calculada a partir do sono, exercício, alimentação, hidratação e energia ao longo do dia.'},
-    {icon:'🔥',title:'Burnout',desc:'Calculado a partir do estresse, ansiedade, fadiga digital e sobrecarga. Acima de 70 é sinal de alerta.'},
-    {icon:'💛',title:'Bem-estar',desc:'Baseado em humor, conexão social, motivação, alegria e autocuidado.'},
-    {icon:'✅',title:'Produtividade',desc:'Combinação de foco, conclusão de tarefas, pausas e controle da rotina.'},
-    {icon:'😴',title:'Sono',desc:'O indicador mais poderoso — afeta todos os outros. Adultos precisam de 7 a 9 horas.'},
-    {icon:'🏃',title:'Atividade física',desc:'Qualquer movimentação do corpo. Libera hormônios do bem-estar e regula o estresse.'},
-    {icon:'🧩',title:'Carga mental',desc:'Quanto sua cabeça estava cheia. Alta carga sem descanso leva ao esgotamento.'},
-    {icon:'🌀',title:'Ansiedade',desc:'Preocupação e nervosismo. Alta ansiedade reduz foco e qualidade do sono.'},
-    {icon:'📱',title:'Tempo de tela',desc:'Acima de 6h por dia aumenta fadiga, ansiedade e piora o sono.'},
-    {icon:'🤝',title:'Conexão social',desc:'Vínculos saudáveis são um dos maiores preditores de bem-estar e saúde mental.'},
-    {icon:'💛',title:'Autocompaixão',desc:'Como você se trata quando erra. Ser gentil consigo mesmo aumenta resiliência.'},
-    {icon:'🌟',title:'Propósito',desc:'Sentir que o dia teve sentido é um fator protetor contra depressão e burnout.'},
+    {title:'Energia',desc:'Calculada a partir do sono, exercício, alimentação, hidratação e energia ao longo do dia.'},
+    {title:'Burnout',desc:'Calculado a partir do estresse, ansiedade, ruminação e fadiga digital. Acima de 70 é sinal de alerta.'},
+    {title:'Bem-estar',desc:'Baseado em humor, conexão social, motivação, gratidão e autocuidado.'},
+    {title:'Produtividade',desc:'Combinação de foco, conclusão de tarefas e pausas. Mede a eficiência cognitiva.'},
+    {title:'Sono',desc:'O indicador mais relevante — afeta todos os demais. Adultos precisam de 7 a 9 horas.'},
+    {title:'Atividade física',desc:'Qualquer movimentação do corpo libera hormônios do bem-estar e regula o estresse.'},
+    {title:'Carga mental',desc:'Quanto a sua mente estava ocupada. Alta carga sem descanso leva ao esgotamento.'},
+    {title:'Ansiedade',desc:'Preocupação e nervosismo excessivos reduzem o foco e comprometem a qualidade do sono.'},
+    {title:'Tempo de tela',desc:'Acima de 6h por dia aumenta a fadiga, a ansiedade e compromete o sono.'},
+    {title:'Conexão social',desc:'Vínculos saudáveis são um dos maiores preditores de bem-estar e saúde mental.'},
+    {title:'Ruminação',desc:'Pensamentos repetitivos esgotam energia mental e estão ligados a ansiedade e depressão.'},
+    {title:'Senso de propósito',desc:'Sentir que o dia teve sentido protege contra o burnout e aumenta a resiliência.'},
   ];
-  document.getElementById('legendGrid').innerHTML=legendDefs.map(l=>'<div class="legend-item"><span class="legend-icon">'+l.icon+'</span><div><div class="legend-title">'+l.title+'</div><div class="legend-desc">'+l.desc+'</div></div></div>').join('');
+  document.getElementById('legendGrid').innerHTML=legendDefs.map(l=>'<div class="legend-item"><div class="legend-icon">—</div><div><div class="legend-title">'+l.title+'</div><div class="legend-desc">'+l.desc+'</div></div></div>').join('');
 
   renderLineChart(data,'all');
-  if(radarChartInst) radarChartInst.destroy();
+
+  if(radarChartInst)radarChartInst.destroy();
   const rctx=document.getElementById('radarChart').getContext('2d');
   radarChartInst=new Chart(rctx,{
     type:'radar',
-    data:{labels:['Sono','Estresse','Carga','Tela','Fadiga','Foco','Humor','Motivação','Alegria','Autocuidado'],
-      datasets:[{label:'Hoje',data:[a.sono||0,a.estresse||0,a.carga||0,a.tela||0,a.fadiga||0,a.foco||0,a.humor||0,a.motivacao||0,a.alegria||0,a.autocuidado||0],borderColor:'#4ade80',backgroundColor:'rgba(74,222,128,.15)',pointBackgroundColor:'#4ade80'}]},
-    options:{responsive:true,plugins:{legend:{labels:{color:'#b0bac8'}}},scales:{r:{ticks:{color:'#6b7a90',backdropColor:'transparent'},grid:{color:'#2a3240'},pointLabels:{color:'#b0bac8',font:{family:'DM Sans',size:11}}}}}
+    data:{labels:['Sono','Estresse','Carga','Tela','Fadiga','Foco','Humor','Motivação','Gratidão','Social'],
+      datasets:[{label:'Hoje',
+        data:[a.sono||0,a.estresse||0,a.carga||0,a.tela||0,a.fadiga||0,a.foco||0,a.humor||0,a.motivacao||0,a.gratidao||0,a.social||0],
+        borderColor:'#2d4a3e',backgroundColor:'rgba(45,74,62,.12)',pointBackgroundColor:'#9a7d4a',borderWidth:1.5}]},
+    options:{responsive:true,plugins:{legend:{labels:{color:'#8a7d6a',font:{family:'EB Garamond',size:13}}}},scales:{r:{ticks:{color:'#8a7d6a',backdropColor:'transparent',font:{family:'EB Garamond',size:10}},grid:{color:'rgba(201,191,168,.3)'},pointLabels:{color:'#8a7d6a',font:{family:'EB Garamond',size:12}}}}}
   });
 
-  document.getElementById('historyList').innerHTML=data.slice().reverse().map((d,i)=>'<li class="history-item"><span class="history-day">'+(d.date||'Dia '+(data.length-i))+'</span><span class="history-vals"><span class="tag tag-e">E '+d.r.energia+'</span><span class="tag tag-b">B '+d.r.burnout+'</span><span class="tag tag-w">W '+(d.r.bemestar||'—')+'</span><span class="tag tag-p">P '+(d.r.produtividade||'—')+'</span></span></li>').join('');
-  const notesHtml=data.filter(d=>d.note).slice().reverse().map(d=>'<div class="note-card"><div class="note-date">'+d.date+'</div><div class="note-text">'+d.note+'</div></div>').join('');
+  document.getElementById('historyList').innerHTML=data.slice().reverse().map((d,i)=>
+    '<li class="history-item"><span class="history-day">'+(d.date||'Dia '+(data.length-i))+'</span><span class="history-vals"><span class="tag tag-e">E '+d.r.energia+'</span><span class="tag tag-b">B '+d.r.burnout+'</span><span class="tag tag-w">W '+(d.r.bemestar||'—')+'</span><span class="tag tag-p">P '+(d.r.produtividade||'—')+'</span></span></li>'
+  ).join('');
+
+  const notesHtml=data.filter(d=>d.note).slice().reverse().map(d=>
+    '<div class="note-card"><div class="note-date">'+d.date+'</div><div class="note-text">'+d.note+'</div></div>'
+  ).join('');
   document.getElementById('notesList').innerHTML=notesHtml?'<h3>Notas registradas</h3>'+notesHtml:'';
 
-  initAIChat(data);
+  initAIChat(data);syncSoundIcons();
 }
 
-/* ====== EXPORT ====== */
+// ─── EXPORT ───────────────────────────────────────────────────────────────────
 function exportReport(){
-  if(!lastDashData||!lastDashData.length) return;
-  const last=lastDashData[lastDashData.length-1]; const r=last.r;
+  if(!lastDashData||!lastDashData.length)return;
+  const last=lastDashData[lastDashData.length-1];const r=last.r;
   const streak=calcStreak(lastDashData);
-  let text='=====================================\n   NEUROPACE IA — RELATÓRIO COMPLETO\n=====================================\n\n';
-  text+='Usuário: '+currentUser+'\nData: '+last.date+'\nTotal de check-ins: '+lastDashData.length+'\nSequência atual: '+streak+' dias seguidos\n\n';
-  text+='--- SCORES DO DIA ---\n';
-  text+='Energia:       '+r.energia+'/100\nBurnout:       '+r.burnout+'/100\nBem-estar:     '+r.bemestar+'/100\nProdutividade: '+r.produtividade+'/100\n\n';
+  let text='=====================================\n';
+  text+='   NEUROPACE — RELATÓRIO COMPLETO\n';
+  text+='=====================================\n\n';
+  text+='Usuário: '+currentUser+'\n';
+  text+='Data: '+last.date+'\n';
+  text+='Total de check-ins: '+lastDashData.length+'\n';
+  text+='Sequência actual: '+streak+' dias seguidos\n\n';
+  text+='--- INDICADORES DO DIA ---\n';
+  text+='Energia:       '+r.energia+'/100\n';
+  text+='Burnout:       '+r.burnout+'/100\n';
+  text+='Bem-estar:     '+r.bemestar+'/100\n';
+  text+='Produtividade: '+r.produtividade+'/100\n\n';
   text+='--- HISTÓRICO RECENTE ---\n';
   lastDashData.slice(-7).reverse().forEach(d=>{
     text+=d.date+' | Energia: '+d.r.energia+' | Burnout: '+d.r.burnout+' | Bem-estar: '+d.r.bemestar+'\n';
   });
-  if(last.note){ text+='\n--- NOTA DO DIA ---\n'+last.note+'\n'; }
-  text+='\nGerado pelo NeuroPace IA';
-  try {
+  if(last.note){text+='\n--- NOTA DO DIA ---\n'+last.note+'\n';}
+  text+='\nGerado pelo NeuroPace';
+  try{
     const blob=new Blob([text],{type:'text/plain'});
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
-    a.href=url; a.download='neuropace-'+last.date.replace(/\//g,'-')+'.txt';
-    a.click(); URL.revokeObjectURL(url);
-  } catch(e){
-    navigator.clipboard.writeText(text).then(()=>alert('Relatório copiado!')).catch(()=>prompt('Copie o relatório abaixo:',text));
+    a.href=url;a.download='neuropace-'+last.date.replace(/\//g,'-')+'.txt';
+    a.click();URL.revokeObjectURL(url);
+  }catch(e){
+    navigator.clipboard.writeText(text).then(()=>alert('Relatório copiado.')).catch(()=>prompt('Copie o relatório:',text));
   }
 }
 
-/* ====== SOUNDS ====== */
-let soundEnabled=localStorage.getItem('np_sound')!=='off';
-function playTone(freq,duration,type='sine',vol=0.15){
-  if(!soundEnabled) return;
-  try {
-    const ctx=new (window.AudioContext||window.webkitAudioContext)();
-    const osc=ctx.createOscillator(); const gain=ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.type=type; osc.frequency.value=freq;
-    gain.gain.setValueAtTime(vol,ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration);
-    osc.start(); osc.stop(ctx.currentTime+duration);
-  } catch(e){}
-}
-function soundAnswer(){ playTone(520,0.12,'sine',0.12); }
-function soundFinish(){ [440,554,660,880].forEach((f,i)=>setTimeout(()=>playTone(f,0.18,'sine',0.13),i*90)); }
-function soundBack(){ playTone(320,0.1,'sine',0.08); }
-
-function toggleSound(){
-  soundEnabled=!soundEnabled;
-  localStorage.setItem('np_sound',soundEnabled?'on':'off');
-  document.querySelectorAll('.sound-toggle').forEach(b=>b.textContent=soundEnabled?'🔊':'🔇');
-}
-document.querySelectorAll('.sound-toggle').forEach(b=>{ b.textContent=soundEnabled?'🔊':'🔇'; });
-
-const _origAnswer=answer;
-window.answer=function(v){ soundAnswer(); _origAnswer(v); };
-const _origGoBack=goBack;
-window.goBack=function(){ soundBack(); _origGoBack(); };
-
-/* ====== AUTO LOGIN ====== */
+// ─── INIT ─────────────────────────────────────────────────────────────────────
 loadTheme();
-(async()=>{ const s=await cloudGet('current'); if(s){currentUser=s;await goToStart();} })();
+syncSoundIcons();
+(async()=>{const s=await cloudGet('current');if(s){currentUser=s;await goToStart();}})();
 </script>
 </body>
 </html>
